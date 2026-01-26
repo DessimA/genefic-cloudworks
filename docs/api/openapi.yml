@@ -1,0 +1,11 @@
+openapi: 3.0.0
+info:
+  title: Portfolio Cloud Dev API
+  version: 1.0.0
+paths:
+  /upload:
+    post:
+      summary: Upload a new portfolio
+      responses:
+        '200':
+          description: Upload successful
