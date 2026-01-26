@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GENEFIC | Narrativa Profissional</title>
+    <link rel="icon" type="image/x-icon" href="assets/logo.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/footer.css">
+    <style>
+        .nav-header { padding: 12px 0; background: var(--color-surface); backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--color-border); }
+        .hero-section { padding: 60px 0; text-align: center; }
+        .hero-title { font-size: 4rem; font-weight: 900; line-height: 1.1; margin-bottom: 32px; letter-spacing: -1.5px; }
+        
+        .feature-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 40px; 
+            padding: 80px 0; 
+        }
+
+        /* Simetria para resoluções intermediárias e mobile */
+        @media (max-width: 1024px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+        }
+
+        .feature-card { padding: 32px; text-align: left; }
+        .feature-card i { font-size: 2rem; color: var(--color-primary); margin-bottom: 16px; }
+    </style>
+    <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+</head>
+<body>
+    <header class="nav-header">
+        <div class="section-container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="assets/logo.png" alt="Logo" style="height: 30px;">
+                <span style="font-weight: 800; font-size: 1.1rem; color: var(--color-primary);">GENEFIC</span>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button class="btn btn--ghost btn--icon" data-theme-toggle title="Tema"><i class="fa-solid fa-moon"></i></button>
+                <a href="login.html" class="btn btn--outline btn--sm">Entrar</a>
+                <a href="login.html" class="btn btn--primary btn--sm">Começar</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="section-container">
+        <section class="hero-section">
+            <h1 class="hero-title">Sua carreira além do <span style="color: var(--color-primary);">código.</span></h1>
+            <p style="font-size: 1.1rem; color: var(--color-text-secondary); max-width: 600px; margin: 0 auto 40px;">
+                Traduza repositórios complexos em narrativas profissionais. Destaque-se para recrutadores em segundos com nossa análise via IA.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <a href="login.html" class="btn btn--primary" style="padding: 14px 32px;">Analisar Perfil</a>
+                <a href="#features" class="btn btn--outline" style="padding: 14px 32px;">Diferenciais</a>
+            </div>
+        </section>
+
+        <section id="features" class="feature-grid">
+            <div class="glass-panel feature-card">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                <h4 style="margin-bottom: 12px; font-weight: 800;">Otimização Estratégica ATS</h4>
+                <p style="font-size: 0.95rem; line-height: 1.6; opacity: 0.9;">
+                    Vença os algoritmos de triagem antes mesmo de falar com um humano. Nossa IA identifica e destaca palavras-chave críticas escondidas no seu código, gerando resumos técnicos otimizados para sistemas de recrutamento (ATS). Transformamos sua "To-Do List" em uma demonstração de proficiência em arquitetura escalável.
+                </p>
+            </div>
+            <div class="glass-panel feature-card">
+                <i class="fa-solid fa-gauge-high"></i>
+                <h4 style="margin-bottom: 12px; font-weight: 800;">Tech Score de Autoridade</h4>
+                <p style="font-size: 0.95rem; line-height: 1.6; opacity: 0.9;">
+                    Receba uma validação técnica baseada em métricas reais de mercado. Analisamos a complexidade das tecnologias, a qualidade da sua documentação e a completude do ciclo de vida do projeto (testes, CI/CD, deploy) para gerar um score exclusivo de competência. Uma prova de conceito automatizada que atesta sua senioridade técnica.
+                </p>
+            </div>
+            <div class="glass-panel feature-card">
+                <i class="fa-solid fa-briefcase"></i>
+                <h4 style="margin-bottom: 12px; font-weight: 800;">Narrativa de Valor de Negócio</h4>
+                <p style="font-size: 0.95rem; line-height: 1.6; opacity: 0.9;">
+                    Código fonte sem contexto é apenas texto. Nossa IA traduz decisões de design e implementações complexas para uma linguagem acessível a gestores e RHs. Explicamos o <strong>porquê</strong> de cada escolha tecnológica e qual o impacto real que seu projeto entrega, elevando sua percepção de valor profissional em segundos.
+                </p>
+            </div>
+        </section>
+
+            <!-- Team Highlight (The Minds Behind GENEFIC) -->
+            <div class="team-section">
+                <div class="hero__badge-container">
+                    <span class="hero__badge" id="typed-text"></span>
+                </div>
+                <div class="team-grid" id="team-grid">
+                    <!-- Gerado dinamicamente via JS -->
+                </div>
+            </div>
+    </main>
+
+    <footer class="main-footer glass-panel" style="border-radius: 0;">
+        <div class="section-container">
+            <div class="footer-grid">
+                <div class="footer-brand-col">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+                        <img src="assets/logo.png" alt="Logo" style="height: 40px;">
+                        <span style="font-weight: 800; font-size: 1.4rem; color: var(--color-primary);">GENEFIC</span>
+                    </div>
+                    <p class="footer-info" style="max-width: 400px;">
+                        A GENEFIC Cloudworks é pioneira em análise de narrativa profissional via IA. 
+                        Nascida no ecossistema AWS re/Start, nossa missão é democratizar o acesso 
+                        a oportunidades de elite para desenvolvedores em início de carreira.
+                    </p>
+                    <div class="footer-socials">
+                        <a href="#" class="btn btn--outline btn--icon" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="#" class="btn btn--outline btn--icon" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" class="btn btn--outline btn--icon" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="footer-title">Plataforma</h4>
+                    <ul class="footer-links">
+                        <li><a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                        <li><a href="#"><i class="fa-solid fa-wand-magic-sparkles"></i> Tech Score</a></li>
+                        <li><a href="#"><i class="fa-solid fa-file-invoice"></i> Gerador de Resumos</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="footer-title">Empresa</h4>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fa-solid fa-users-gear"></i> Equipe</a></li>
+                        <li><a href="#"><i class="fa-solid fa-handshake"></i> Trabalhe Conosco</a></li>
+                        <li><a href="#"><i class="fa-solid fa-building"></i> Sobre Nós</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="footer-title">Suporte</h4>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fa-solid fa-headset"></i> Solicite Atendimento</a></li>
+                        <li><a href="#"><i class="fa-solid fa-book"></i> Documentação</a></li>
+                        <li><a href="#"><i class="fa-solid fa-circle-question"></i> FAQ</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-info">
+                    © 2026 GENEFIC Cloudworks. Escola da Nuvem - Projeto Final RESTART + IA.<br>
+                    AWS Serverless Architecture | Bedrock & Comprehend NLP.
+                </div>
+                <div style="display: flex; gap: 24px;">
+                    <a href="#" class="footer-links" style="font-size: 0.85rem; color: var(--color-text-secondary); text-decoration: none;">Privacidade</a>
+                    <a href="#" class="footer-links" style="font-size: 0.85rem; color: var(--color-text-secondary); text-decoration: none;">Termos de Uso</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

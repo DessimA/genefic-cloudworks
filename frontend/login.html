@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar | GENEFIC Cloudworks</title>
+    <link rel="icon" type="image/x-icon" href="assets/logo.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/forms.css">
+</head>
+<body class="hero-bg">
+    <header style="padding: 24px 0; position: absolute; width: 100%; top: 0; left: 0; z-index: 100;">
+        <div class="section-container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="index.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+                <img src="assets/logo.png" alt="Logo" style="height: 32px;">
+                <span style="font-weight: 800; color: var(--color-primary);">GENEFIC</span>
+            </a>
+            <button class="btn btn--ghost" data-theme-toggle><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 24px 60px;">
+        <div class="glass-panel" style="padding: 56px; width: 100%; max-width: 460px; text-align: center; margin-top: 20px;">
+            <div style="margin-bottom: 32px;">
+                <img src="assets/logo.png" alt="GENEFIC Logo" style="height: 160px; width: auto; display: block; margin: 0 auto;">
+            </div>
+            <h2 style="font-weight: 800; margin-bottom: 40px; letter-spacing: -0.5px;">Acesse sua Narrativa</h2>
+            
+            <form id="login-form" style="text-align: left;">
+                <div class="form-group">
+                    <label class="form-label">E-mail Corporativo</label>
+                    <input type="email" id="email" class="form-input" placeholder="exemplo@cloudworks.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Chave de Acesso</label>
+                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn--primary btn--block btn--lg">Entrar no Sistema</button>
+            </form>
+
+            <div style="margin: 32px 0; display: flex; align-items: center; gap: 16px; color: var(--color-text-secondary); font-size: 0.9rem;">
+                <div style="flex: 1; height: 1px; background: var(--color-border);"></div>
+                ou
+                <div style="flex: 1; height: 1px; background: var(--color-border);"></div>
+            </div>
+
+            <button class="btn btn--outline btn--block btn--lg" id="github-login" style="height: 56px;">
+                <i class="fa-brands fa-github"></i> Continuar com GitHub
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { AuthManager } from './js/auth.js';
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            AuthManager.login(document.getElementById('email').value, "");
+        });
+        document.getElementById('github-login').addEventListener('click', () => AuthManager.mockLogin());
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | GENEFIC Cloudworks</title>
+    <link rel="icon" type="image/x-icon" href="assets/logo.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/forms.css">
+    <link rel="stylesheet" href="css/components/toast.css">
+    <link rel="stylesheet" href="css/components/footer.css">
+    <link rel="stylesheet" href="css/components/dashboard-ui.css">
+    <style>
+        .app-layout { display: flex; flex-direction: column; min-height: 100vh; }
+        @media (min-width: 1024px) {
+            .app-layout { flex-direction: row; }
+            .sidebar { width: 80px; height: 100vh; position: sticky; top: 0; align-items: center; }
+            .sidebar:hover { width: 280px; }
+            .sidebar .nav-text { display: none; }
+            .sidebar:hover .nav-text { display: inline; }
+            .sidebar .logo-text { display: none; }
+            .sidebar:hover .logo-text { display: inline; }
+        }
+        .sidebar { background: var(--color-surface); padding: 32px 16px; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; transition: width 0.3s var(--transition); z-index: 1001; }
+        .main-content { flex: 1; padding: 40px 0; display: flex; flex-direction: column; }
+        .nav-link { display: flex; align-items: center; gap: 16px; padding: 14px; border-radius: 12px; text-decoration: none; color: var(--color-text-secondary); transition: var(--transition); justify-content: center; margin-bottom: 8px; }
+        .sidebar:hover .nav-link { justify-content: flex-start; }
+        .nav-link:hover, .nav-link--active { background: var(--color-primary); color: white; }
+    </style>
+</head>
+<body class="hero-bg">
+    <div class="app-layout">
+        <aside class="sidebar glass-panel" style="border-radius: 0;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 48px; justify-content: center;">
+                <img src="assets/logo.png" alt="Logo" style="height: 32px;">
+                <span class="logo-text" style="font-weight: 900; color: var(--color-primary); font-size: 1.2rem;">GENEFIC</span>
+            </div>
+            <nav style="flex: 1; width: 100%;">
+                <a href="#" class="nav-link nav-link--active"><i class="fa-solid fa-house-chimney-window"></i> <span class="nav-text">Início</span></a>
+                <a href="#" class="nav-link"><i class="fa-solid fa-folder-tree"></i> <span class="nav-text">Projetos</span></a>
+                <a href="#" class="nav-link"><i class="fa-solid fa-user-tie"></i> <span class="nav-text">RH View</span></a>
+                <button class="nav-link" data-theme-toggle style="background:none; border:none; width:100%; cursor:pointer;">
+                    <i class="fa-solid fa-circle-half-stroke"></i> <span class="nav-text">Aparência</span>
+                </button>
+            </nav>
+            <button class="btn btn--outline btn--icon" id="logout-btn" title="Sair"><i class="fa-solid fa-power-off"></i></button>
+        </aside>
+
+        <main class="main-content">
+            <div style="flex: 1;">
+                <div class="section-container">
+                    <!-- Top Bar -->
+                    <header style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px;">
+                        <div>
+                            <h1 style="font-size: 2.2rem; font-weight: 900; margin: 0;">Olá, <span id="user-display">Desenvolvedor</span></h1>
+                            <p style="color: var(--color-text-secondary); font-weight: 500;">Sua narrativa profissional começa aqui.</p>
+                        </div>
+                        <div class="glass-panel" style="padding: 12px 20px; display: flex; align-items: center; gap: 12px;">
+                            <span class="status-badge status--pro">Plano Premium</span>
+                            <i class="fa-solid fa-circle-check" style="color: var(--color-primary);"></i>
+                        </div>
+                    </header>
+
+                    <!-- Analysis Input -->
+                    <section class="glass-panel" style="padding: 40px; margin-bottom: 48px; border: 2px solid var(--color-primary-light);">
+                        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                            <h2 style="margin-bottom: 24px;"><i class="fa-brands fa-github"></i> Importar Repositório Público</h2>
+                            <div style="display: flex; gap: 12px; background: var(--color-background); padding: 8px; border-radius: 12px; border: 1px solid var(--color-border);">
+                                <input type="url" id="repo-url" class="form-input" placeholder="Cole a URL do projeto (ex: https://github.com/usuario/projeto)" style="border: none; background: transparent; height: 48px;">
+                                <button id="analyze-btn" class="btn btn--primary" style="width: 60px; height: 48px; padding: 0;"><i class="fa-solid fa-bolt"></i></button>
+                            </div>
+                            <p style="font-size: 0.8rem; margin-top: 16px; color: var(--color-text-secondary); opacity: 0.7;">
+                                <i class="fa-solid fa-shield-halved"></i> Análise somente-leitura em conformidade com LGPD.
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- Analysis Results Area -->
+                    <div id="results-area" style="display: none; animation: slideUp 0.5s ease-out;">
+                        <h2 style="font-weight: 900; margin-bottom: 32px; display: flex; align-items: center; gap: 12px;">
+                            <i class="fa-solid fa-square-poll-vertical" style="color: var(--color-primary);"></i>
+                            Relatório de Inteligência: <span id="res-repo-name" style="color: var(--color-primary);"></span>
+                        </h2>
+
+                        <div class="result-grid">
+                            <!-- Left: Metrics -->
+                            <aside style="display: flex; flex-direction: column; gap: 24px;">
+                                <div class="glass-panel" style="padding: 32px; text-align: center;">
+                                    <div class="tech-score-gauge" id="score-gauge" style="--score: 0;" data-value="0"></div>
+                                    <h4 style="font-weight: 800;">Tech Score</h4>
+                                    <p style="font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 8px;">Métrica baseada em complexidade e documentação técnica.</p>
+                                </div>
+
+                                <div class="glass-panel" style="padding: 24px;">
+                                    <h4 style="font-weight: 800; margin-bottom: 16px;"><i class="fa-solid fa-code"></i> Tecnologias</h4>
+                                    <div id="stack-tags" class="tag-cloud"></div>
+                                </div>
+                            </aside>
+
+                            <!-- Right: Narrative -->
+                        <div style="display: flex; flex-direction: column; gap: 32px;">
+                            <div class="narrative-card glass-panel">
+                                <h3 style="font-weight: 900;"><i class="fa-solid fa-file-contract"></i> Resumo Estratégico (ATS)</h3>
+                                <div id="ats-result" style="margin-top: 20px; line-height: 1.8;"></div>
+                                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                                    <button class="btn btn--outline btn--sm"><i class="fa-solid fa-copy"></i> Copiar</button>
+                                </div>
+                            </div>
+
+                            <div class="narrative-card glass-panel" style="border-left-color: var(--color-secondary);">
+                                <h3 style="font-weight: 900;"><i class="fa-solid fa-lightbulb"></i> Sugestões de Evolução</h3>
+                                <ul id="suggestions-list" style="margin-top: 20px; padding-left: 20px; line-height: 1.8;"></ul>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- History Section (Simétrica) -->
+                    <section style="margin-top: 80px;">
+                        <h3 style="font-weight: 900; margin-bottom: 24px;">Histórico Recente</h3>
+                        <div class="history-grid" id="history-container">
+                            <div class="glass-panel history-card" style="opacity: 0.5; border-style: dashed; display: flex; align-items: center; justify-content: center;">
+                                <p>Nenhuma análise anterior encontrada.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Footer Fixo -->
+            <footer class="main-footer" style="margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--color-border);">
+                <div class="section-container" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="footer-info">
+                        <strong>GENEFIC Cloudworks</strong> | © 2026 Inteligência Artificial
+                    </div>
+                    <div style="display: flex; gap: 20px;">
+                        <a href="#" class="nav-link" style="padding: 0;"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" class="nav-link" style="padding: 0;"><i class="fa-brands fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+    <script type="module" src="js/main.js"></script>
+    <script type="module">
+        import { AuthManager } from './js/auth.js';
+        AuthManager.requireAuth();
+        document.getElementById('logout-btn').addEventListener('click', () => AuthManager.logout());
+    </script>
+</body>
+</html>
