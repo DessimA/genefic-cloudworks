@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        pip install black flake8
+    - name: Run Black
+      run: black --check .
+    - name: Run Flake8
+      run: flake8 .
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: hashicorp/setup-terraform@v2
+    - name: Terraform Format
+      run: terraform fmt -check
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ./terraform
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: ./terraform
