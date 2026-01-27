@@ -1,0 +1,38 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: genefic-localstack
+    environment:
+      - SERVICES=s3,lambda,dynamodb,apigateway,iam,cloudfront,sts
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LAMBDA_DOCKER_NETWORK=genefic-net
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    volumes:
+      - "./.localstack:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - genefic-net
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    container_name: genefic-dynamodb-admin
+    environment:
+      - DYNAMO_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+    ports:
+      - "8001:8001"
+    depends_on:
+      - localstack
+    networks:
+      - genefic-net
+
+networks:
+  genefic-net:
+    name: genefic-net
+    driver: bridge

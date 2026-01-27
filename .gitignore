@@ -1,6 +1,6 @@
 # Local Environment
 .env
-.env.example
+#.env.example
 .localstack/
 
 # Terraform
@@ -18,7 +18,8 @@ __pycache__/
 venv/
 
 # Build & Lambda
-src/lambda/upload/lambda.zip
+**/dist/
+**/lambda.zip
 frontend/js/config.js
 
 # Temporary Scripts
@@ -33,3 +34,49 @@ setup_git.sh
 # OS files
 .DS_Store
 Thumbs.db
+
+infrastructure/terraform/.terraform/
+
+infrastructure/terraform/*.tfstate*
+
+backend/lambdas/dist/
+
+ollama_data/
+
+*.zip
+
+*.zip
+
+backend/lambdas/dist/
+
+.localstack/
+
+ollama_data/
+
+infrastructure/terraform/.terraform/
+
+infrastructure/terraform/*.tfstate*
+
+infrastructure/terraform/terraform.tfvars
+
+.env
+
+commit_changes.sh
+
+
+
+*.zip
+
+backend/lambdas/dist/
+
+.localstack/
+
+ollama_data/
+
+infrastructure/terraform/.terraform/
+
+infrastructure/terraform/*.tfstate*
+
+infrastructure/terraform/terraform.tfvars
+
+.env
