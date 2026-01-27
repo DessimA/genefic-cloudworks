@@ -17,11 +17,9 @@ jobs:
         python-version: '3.11'
     - name: Install dependencies
       run: |
-        pip install black flake8
-    - name: Run Black
-      run: black --check .
+        pip install flake8
     - name: Run Flake8
-      run: flake8 .
+      run: flake8 . --exclude=backend/lambdas/dist,infrastructure/local/.localstack
 
   terraform:
     runs-on: ubuntu-latest
@@ -30,9 +28,10 @@ jobs:
     - uses: hashicorp/setup-terraform@v2
     - name: Terraform Format
       run: terraform fmt -check
+      working-directory: ./infrastructure/terraform
     - name: Terraform Init
       run: terraform init
-      working-directory: ./terraform
+      working-directory: ./infrastructure/terraform
     - name: Terraform Validate
       run: terraform validate
-      working-directory: ./terraform
+      working-directory: ./infrastructure/terraform

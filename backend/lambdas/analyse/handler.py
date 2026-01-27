@@ -1,28 +1,32 @@
 import json
 import os
-import logging
-import requests
-import re
 import time
+import logging
+import boto3
 import base64
+import re
 from decimal import Decimal
+from ollama import Client
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Configurações via Variáveis de Ambiente
-OLLAMA_HOST = os.environ.get("OLLAMA_ENDPOINT", "http://host.docker.internal:11434")
-OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
-PRIMARY_MODEL = "gpt-oss:120b-cloud"
-FALLBACK_MODEL = "deepseek-v3.1:671b-cloud"
-TABLE_NAME = os.environ.get("DYNAMODB_TABLE")
+# Configuração de endpoints para LocalStack
 ENDPOINT_URL = os.environ.get("AWS_ENDPOINT_URL") or f"http://{os.environ.get('LOCALSTACK_HOSTNAME', 'localstack')}:4566"
 
-# Inicialização de Clientes
-# dynamodb = boto3.resource("dynamodb", endpoint_url=ENDPOINT_URL) if 'boto3' in globals() else None
-import boto3
 dynamodb = boto3.resource("dynamodb", endpoint_url=ENDPOINT_URL)
 lambda_client = boto3.client("lambda", endpoint_url=ENDPOINT_URL)
+
+TABLE_NAME = os.environ.get("DYNAMODB_TABLE")
+OLLAMA_HOST = os.environ.get("OLLAMA_ENDPOINT", "http://host.docker.internal:11434")
+OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
+
+# Inicializa o Cliente Ollama
+ollama_headers = {}
+if OLLAMA_API_KEY:
+    ollama_headers['Authorization'] = f'Bearer {OLLAMA_API_KEY}'
+
+ollama_client = Client(host=OLLAMA_HOST, headers=ollama_headers)
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -55,7 +59,7 @@ def fetch_docs(repo_url):
         
         default_branch = repo_info.get("default_branch", "main")
         tree = fetch_github_content(f"https://api.github.com/repos/{user}/{repo}/git/trees/{default_branch}?recursive=1")
-        context = f"DESCRIÇÃO: {repo_info.get('description')}\n\nDOCUMENTAÇÃO:\n"
+        context = f"DESCRIÇÃO: {repo_info.get('description', 'Sem descrição.')}\n\nDOCUMENTAÇÃO:\n"
         
         if tree and "tree" in tree:
             md_files = [i for i in tree["tree"] if i["path"].lower().endswith(".md")][:3]
@@ -66,81 +70,91 @@ def fetch_docs(repo_url):
                     context += f"\n--- {f['path']} ---\n{text}\n"
         return context[:6000]
     except Exception as e:
-        logger.error(f"Erro GitHub: {e}")
+        logger.error(f"Erro GitHub: {str(e)}")
         return "Erro ao extrair metadados."
 
-def call_ollama(prompt):
-    models = [PRIMARY_MODEL, FALLBACK_MODEL]
+def call_ollama_engine(prompt):
+    """Chamada para o motor Ollama com lógica de Fallback"""
+    models = ["gpt-oss:120b-cloud", "deepseek-v3.1:671b-cloud"]
     last_error = ""
-    
-    headers = {"Content-Type": "application/json"}
-    if OLLAMA_API_KEY:
-        headers["Authorization"] = f"Bearer {OLLAMA_API_KEY}"
 
     for model in models:
         try:
-            logger.info(f"Tentando modelo {model} em {OLLAMA_HOST}")
-            payload = {
-                "model": model,
-                "messages": [
-                    {
-                        "role": "system", 
-                        "content": "Você é o 'GENEFIC ATS Optimizer', uma IA especialista em Engenharia de Software e Recrutamento Técnico. Analise o repositório GitHub fornecido e gere um relatório de impacto. Retorne APENAS um JSON válido em Português do Brasil com as chaves: tech_score (0-100), improvements (lista), ats_summary (string), key_achievements (lista), technologies (lista)."
-                    },
-                    {"role": "user", "content": f"Analise este conteúdo de repositório e gere o relatório:\n\n{prompt}"}
-                ],
-                "stream": False
-            }
-            resp = requests.post(f"{OLLAMA_HOST}/api/chat", headers=headers, json=payload, timeout=180)
-            resp.raise_for_status()
-            content = resp.json()["message"]["content"]
+            system_instruction = (
+                "Você é o 'GENEFIC ATS Optimizer', uma IA especialista em Engenharia de Software e Recrutamento Técnico. "
+                "Sua missão é analisar repositórios GitHub e fornecer feedback para melhorar a empregabilidade do desenvolvedor. "
+                "Sua saída deve ser EXCLUSIVAMENTE um JSON válido.\n\n"
+                "REGRAS DE RESPOSTA:\n"
+                "- Responda SEMPRE em Português do Brasil.\n"
+                "- Use as chaves: tech_score (number), improvements (lista de strings), ats_summary (string), key_achievements (lista de strings), technologies (lista de strings).\n"
+                "- Não inclua explicações fora do JSON."
+            )
             
-            # Tentar extrair JSON da resposta
-            match = re.search(r'\{.*\}', content, re.DOTALL)
-            if match:
-                return json.loads(match.group(0))
-            raise ValueError("Resposta da IA não contém um bloco JSON válido.")
+            messages = [
+                {'role': 'system', 'content': system_instruction},
+                {'role': 'user', 'content': f"Analise este repositório e gere o relatório JSON:\n\n{prompt}"}
+            ]
+
+            logger.info(f"Tentando Ollama com modelo: {model} em {OLLAMA_HOST}")
+            response = ollama_client.chat(model=model, messages=messages, stream=False)
             
+            content = response['message']['content']
+            logger.info(f"Sucesso com o modelo {model}")
+            return content
         except Exception as e:
             last_error = str(e)
-            logger.warning(f"Falha no modelo {model}: {last_error}")
+            logger.warning(f"Falha no modelo {model}: {last_error}. Tentando fallback...")
             continue
-            
-    raise RuntimeError(f"Falha total na IA após tentar fallback. Último erro: {last_error}")
+    
+    logger.error(f"Todos os modelos de IA falharam. Último erro: {last_error}")
+    raise RuntimeError(f"Falha total na IA após tentar fallback: {last_error}")
 
 def handler(event, context):
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS_HEADERS, "body": ""}
 
     if event.get("httpMethod") == "GET":
-        task_id = (event.get("queryStringParameters") or {}).get("task_id")
+        params = event.get("queryStringParameters") or {}
+        task_id = params.get("task_id")
         if not task_id: return {"statusCode": 400, "headers": CORS_HEADERS, "body": "task_id missing"}
-        item = dynamodb.Table(TABLE_NAME).get_item(Key={"user_id": "anonymous", "timestamp": int(task_id)}).get("Item")
+        table = dynamodb.Table(TABLE_NAME)
+        item = table.get_item(Key={"user_id": "anonymous", "timestamp": int(task_id)}).get("Item")
         return {"statusCode": 200, "headers": CORS_HEADERS, "body": json.dumps(item, cls=DecimalEncoder)}
 
     if event.get("source") == "worker":
         task_id, repo_url = event["task_id"], event["repo_url"]
         try:
             docs = fetch_docs(repo_url)
-            data = call_ollama(f"Analise: {repo_url}\n{docs}")
+            analysis = call_ollama_engine(f"Analise: {repo_url}\n{docs}")
+            
+            match = re.search(r'\{.*\}', analysis, re.DOTALL)
+            if not match: raise ValueError("IA não retornou um formato JSON válido.")
+
+            data = json.loads(match.group(0))
+            if "error" in data and len(data.keys()) <= 2:
+                raise ValueError(f"Ollama retornou erro: {data['error']}")
+
+            required_keys = ["tech_score", "improvements", "ats_summary", "key_achievements", "technologies"]
+            for key in required_keys:
+                if key not in data:
+                    data[key] = [] if key in ["improvements", "key_achievements", "technologies"] else "Informação não disponível"
             
             dynamodb.Table(TABLE_NAME).update_item(
                 Key={"user_id": "anonymous", "timestamp": int(task_id)},
                 UpdateExpression="SET #s = :val, structured_data = :d, tech_score = :ts",
                 ExpressionAttributeNames={"#s": "status"},
-                ExpressionAttributeValues={":val": "COMPLETED", ":d": data, ":ts": data.get("tech_score", 0)}
+                ExpressionAttributeValues={ ":val": "COMPLETED", ":d": data, ":ts": data.get("tech_score", 0)}
             )
         except Exception as e:
-            logger.error(f"Worker fail: {e}")
+            logger.error(f"Worker process fail: {str(e)}")
             dynamodb.Table(TABLE_NAME).update_item(
                 Key={"user_id": "anonymous", "timestamp": int(task_id)},
                 UpdateExpression="SET #s = :val, structured_data = :d",
                 ExpressionAttributeNames={"#s": "status"},
-                ExpressionAttributeValues={":val": "FAILED", ":d": {"error": str(e)}}
+                ExpressionAttributeValues={ ":val": "FAILED", ":d": {"error": str(e)}}
             )
         return {}
 
-    # POST (Início)
     try:
         body = json.loads(event.get("body", "{}"))
         repo_url = body.get("repo_url")
