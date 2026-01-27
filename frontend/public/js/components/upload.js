@@ -24,10 +24,34 @@ export class UploadManager {
 
   async handleAnalysis(repoUrl) {
     this.toast.show(`Iniciando Análise Estratégica...`, 'info');
+    
+    // UI States
     this.analyzeBtn.disabled = true;
     this.analyzeBtn.innerHTML = '<i class="fa-solid fa-brain fa-fade"></i>';
+    
     const loadingIndicator = document.querySelector('#loading-indicator');
+    const emptyState = document.querySelector('#empty-state');
+    const resultsArea = document.querySelector('#results-area');
+    const loadingMsg = document.querySelector('#loading-msg');
+    
     if (loadingIndicator) loadingIndicator.style.display = 'block';
+    if (emptyState) emptyState.style.display = 'none';
+    if (resultsArea) resultsArea.style.display = 'none';
+
+    // Dynamic Messages
+    const messages = [
+      "Clonando metadados do GitHub...",
+      "Extraindo tecnologias do README...",
+      "Consultando especialistas em IA...",
+      "Calculando Tech Authority Score...",
+      "Otimizando narrativa para ATS...",
+      "Finalizando relatório de impacto..."
+    ];
+    let msgIndex = 0;
+    const msgInterval = setInterval(() => {
+      if (loadingMsg) loadingMsg.textContent = messages[msgIndex % messages.length];
+      msgIndex++;
+    }, 3000);
     
     try {
       // 1. Iniciar Task
@@ -53,6 +77,7 @@ export class UploadManager {
           const result = await statusRes.json();
 
           if (result.status === 'COMPLETED') {
+            clearInterval(msgInterval);
             this.renderResults(result);
             return true;
           } else if (result.status === 'FAILED') {
@@ -72,14 +97,18 @@ export class UploadManager {
           }
         } catch (e) {
           clearInterval(interval);
+          clearInterval(msgInterval);
           if (loadingIndicator) loadingIndicator.style.display = 'none';
+          if (emptyState) emptyState.style.display = 'block';
           this.toast.show(`Erro na Análise: ${e.message}`, 'error');
           this.resetButton();
         }
       }, 3000);
 
     } catch (error) {
+      clearInterval(msgInterval);
       if (loadingIndicator) loadingIndicator.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'block';
       this.toast.show(`Falha na Conexão: ${error.message}`, 'error');
       this.resetButton();
     }
@@ -87,8 +116,11 @@ export class UploadManager {
 
   renderResults(result) {
     const data = result.structured_data;
-    document.querySelector('#results-area').style.display = 'block';
-    document.querySelector('#res-repo-name').textContent = result.repo_url.split('/').pop();
+    const resultsArea = document.querySelector('#results-area');
+    const emptyState = document.querySelector('#empty-state');
+    
+    if (resultsArea) resultsArea.style.display = 'block';
+    if (emptyState) emptyState.style.display = 'none';
 
     // Atualizar Score e Gauge
     const scoreVal = document.querySelector('#tech-score-val');
@@ -100,34 +132,54 @@ export class UploadManager {
     }
 
     document.querySelector('#ats-result').innerHTML = `
-      <div class="glass-panel" style="padding: 24px; border-left: 4px solid var(--color-primary); position: relative;">
+      <div class="dashboard-card" style="border-left: 4px solid var(--color-primary); position: relative;">
           <button class="btn btn--ghost btn--sm" style="position: absolute; top: 16px; right: 16px;" onclick="navigator.clipboard.writeText(\`${data.ats_summary}\`).then(() => alert('Copiado!'))" title="Copiar"><i class="fa-solid fa-copy"></i></button>
-          <h4 style="font-weight: 800; margin-bottom: 12px;"><i class="fa-solid fa-file-lines"></i> Narrativa Profissional (ATS)</h4>
-          <p style="font-size: 0.95rem; line-height: 1.6; font-style: italic;">"${data.ats_summary}"</p>
+          <h4 style="font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-primary);"></i> Narrativa Profissional (ATS)
+          </h4>
+          <p style="font-size: 1rem; line-height: 1.7; color: var(--color-text-primary); font-style: italic;">"${data.ats_summary}"</p>
       </div>
 
-      <div class="glass-panel" style="padding: 24px; border-left: 4px solid var(--color-accent);">
-          <h4 style="font-weight: 800; margin-bottom: 12px;"><i class="fa-solid fa-award"></i> Conquistas Técnicas</h4>
-          <ul style="font-size: 0.9rem; padding-left: 20px; line-height: 1.6;">
-            ${(data.key_achievements || []).map(a => `<li>${a}</li>`).join('')}
+      <div class="dashboard-card" style="border-left: 4px solid var(--color-secondary);">
+          <h4 style="font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-trophy" style="color: var(--color-secondary);"></i> Conquistas Técnicas
+          </h4>
+          <ul style="display: grid; gap: 12px; padding: 0; list-style: none;">
+            ${(data.key_achievements || []).map(a => `
+              <li style="display: flex; gap: 12px; align-items: start; font-size: 0.95rem;">
+                <i class="fa-solid fa-check-circle" style="color: var(--color-secondary); margin-top: 4px;"></i>
+                <span>${a}</span>
+              </li>
+            `).join('')}
           </ul>
       </div>
       
-      <div class="glass-panel" style="padding: 24px; border-left: 4px solid var(--color-secondary);">
-          <h4 style="font-weight: 800; margin-bottom: 12px;"><i class="fa-solid fa-lightbulb"></i> Sugestões de Melhoria</h4>
-          <ul style="font-size: 0.9rem; padding-left: 20px; line-height: 1.6;">
-            ${(data.improvements || []).map(i => `<li>${i}</li>`).join('')}
+      <div class="dashboard-card" style="border-left: 4px solid var(--color-accent);">
+          <h4 style="font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-lightbulb" style="color: var(--color-accent);"></i> Sugestões de Melhoria
+          </h4>
+          <ul style="display: grid; gap: 12px; padding: 0; list-style: none;">
+            ${(data.improvements || []).map(i => `
+              <li style="display: flex; gap: 12px; align-items: start; font-size: 0.95rem;">
+                <i class="fa-solid fa-circle-arrow-up" style="color: var(--color-accent); margin-top: 4px;"></i>
+                <span>${i}</span>
+              </li>
+            `).join('')}
           </ul>
       </div>
     `;
 
     const stackTagsEl = document.querySelector('#stack-tags');
     if (stackTagsEl) {
-      stackTagsEl.innerHTML = (data.technologies || []).map(t => `<span class="skill-tag">${t}</span>`).join('');
+      stackTagsEl.innerHTML = (data.technologies || []).map(t => `
+        <span style="background: var(--color-primary-light); color: var(--color-primary); padding: 4px 12px; border-radius: 100px; font-size: 0.75rem; font-weight: 700; border: 1px solid var(--color-primary);">
+          ${t}
+        </span>
+      `).join('');
     }
 
     this.toast.show(`Análise Concluída!`, 'success');
-    document.querySelector('#results-area').scrollIntoView({ behavior: 'smooth' });
+    if (resultsArea) resultsArea.scrollIntoView({ behavior: 'smooth' });
     this.resetButton();
   }
 

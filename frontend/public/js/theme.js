@@ -23,6 +23,9 @@ export class ThemeManager {
         icon.className = theme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
       }
     });
+    
+    // Dispara evento para outros componentes se necessário
+    window.dispatchEvent(new CustomEvent('themechanged', { detail: { theme } }));
   }
 
   toggleTheme() {

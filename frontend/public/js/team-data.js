@@ -4,14 +4,14 @@ export const TEAM_MEMBERS = [
         role: "Product Owner",
         linkedin: "https://www.linkedin.com/in/emanuelheraclio/",
         github: "#",
-        image: "../assets/team-image/emanuel.jpg" // Deixe vazio para usar Iniciais ou coloque o link da foto
+        image: "assets/team-image/emanuel.jpg"
     },
     {
         name: "Cynthia Borelli",
         role: "Scrum Master",
         linkedin: "https://www.linkedin.com/in/cynthiaborelli/",
         github: "#",
-        image: "../assets/team-image/borelli.jpg"
+        image: "assets/team-image/borelli.jpg"
     },
     {
         name: "Edivaldo Junior",
@@ -25,7 +25,7 @@ export const TEAM_MEMBERS = [
         role: "Full Stack Dev",
         linkedin: "#",
         github: "#",
-        image: "../assets/team-image/gabriel.png"
+        image: "assets/team-image/gabriel.png"
     },
     {
         name: "José Anderson",
@@ -39,6 +39,6 @@ export const TEAM_MEMBERS = [
         role: "Frontend Dev",
         linkedin: "https://www.linkedin.com/in/naiara-carulina-9185a2117/",
         github: "#",
-        image: "../assets/team-image/naiara.png"
+        image: "assets/team-image/naiara.png"
     }
 ];

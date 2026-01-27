@@ -1,4 +1,6 @@
-:root[data-theme="light"] {
+/* --- Variables & Themes --- */
+:root {
+  /* Light Theme (Default) */
   --color-primary: #0052CC;
   --color-primary-hover: #0747A6;
   --color-primary-light: rgba(0, 82, 204, 0.1);
@@ -6,15 +8,24 @@
   --color-background: #F4F5F7;
   --color-surface: rgba(255, 255, 255, 0.95);
   --color-surface-elevated: #FFFFFF;
+  --color-surface-glass: rgba(255, 255, 255, 0.7);
   --color-text-primary: #172B4D;
   --color-text-secondary: #44546F;
   --color-border: rgba(9, 30, 66, 0.13);
   --bg-filter: invert(0.9) hue-rotate(180deg) brightness(1.1);
   --shadow-main: 0 12px 24px -6px rgba(9, 30, 66, 0.15), 0 0 1px 0 rgba(9, 30, 66, 0.31);
   --gauge-bg: #EBECF0;
+
+  /* Global Settings */
+  --bg-image: url('../assets/background.jpg');
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --radius-btn: 8px;
+  --radius-panel: 16px;
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --container-max: 1200px;
 }
 
-:root[data-theme="dark"] {
+[data-theme="dark"] {
   --color-primary: #4C9AFF;
   --color-primary-hover: #2684FF;
   --color-primary-light: rgba(76, 154, 255, 0.2);
@@ -22,19 +33,11 @@
   --color-background: #091E42;
   --color-surface: rgba(22, 38, 70, 0.85);
   --color-surface-elevated: #162546;
+  --color-surface-glass: rgba(22, 38, 70, 0.7);
   --color-text-primary: #FFFFFF;
   --color-text-secondary: #B3D4FF;
   --color-border: rgba(255, 255, 255, 0.15);
   --bg-filter: brightness(0.4) contrast(1.2);
   --shadow-main: 0 12px 24px -6px rgba(0, 0, 0, 0.6);
   --gauge-bg: #071432;
-}
-
-:root {
-  --bg-image: url('../assets/background.jpg');
-  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
-  --radius-btn: 8px;
-  --radius-panel: 16px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --container-max: 1200px;
 }

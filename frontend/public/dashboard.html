@@ -12,95 +12,136 @@
     <link rel="stylesheet" href="css/components/buttons.css">
     <link rel="stylesheet" href="css/components/forms.css">
     <link rel="stylesheet" href="css/components/toast.css">
-    <style>
-        .app-layout { display: flex; flex-direction: column; min-height: 100vh; }
-        @media (min-width: 1024px) {
-            .app-layout { flex-direction: row; }
-            .sidebar { width: 80px; height: 100vh; position: sticky; top: 0; align-items: center; }
-            .sidebar:hover { width: 260px; }
-            .sidebar .nav-text { display: none; }
-            .sidebar:hover .nav-text { display: inline; }
-            .sidebar .logo-text { display: none; }
-            .sidebar:hover .logo-text { display: inline; }
-        }
-        .sidebar { background: var(--color-surface); padding: 24px 16px; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; transition: width 0.3s var(--transition); z-index: 1001; }
-        .main-content { flex: 1; padding: 32px 0; }
-        .nav-link { 
-            display: flex; align-items: center; gap: 16px; padding: 12px; 
-            border-radius: 10px; text-decoration: none; color: var(--color-text-secondary);
-            transition: var(--transition); justify-content: center;
-        }
-        .sidebar:hover .nav-link { justify-content: flex-start; }
-        .nav-link:hover, .nav-link--active { background: var(--color-primary); color: white; }
-        
-        .result-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-top: 32px; }
-        @media (min-width: 768px) { .result-grid { grid-template-columns: 300px 1fr; } }
-    </style>
+    <link rel="stylesheet" href="css/components/dashboard-ui.css">
 </head>
 <body>
     <div class="app-layout">
-        <aside class="sidebar glass-panel" style="border-radius: 0;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 40px; justify-content: center;">
+        <!-- Desktop Sidebar -->
+        <aside class="desktop-sidebar glass-panel">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 40px;">
                 <img src="assets/logo.png" alt="Logo" style="height: 32px;">
-                <span class="logo-text" style="font-weight: 800; color: var(--color-primary);">GENEFIC</span>
+                <span style="font-weight: 800; font-size: 1.2rem; color: var(--color-primary);">GENEFIC</span>
             </div>
-            <nav style="flex: 1; width: 100%;">
-                <a href="#" class="nav-link nav-link--active" title="Dashboard"><i class="fa-solid fa-house"></i> <span class="nav-text">Dashboard</span></a>
-                <a href="#" class="nav-link" title="Projetos"><i class="fa-solid fa-folder"></i> <span class="nav-text">Projetos</span></a>
-                <button class="nav-link" data-theme-toggle style="background:none; border:none; width:100%; cursor:pointer;" title="Alternar Tema">
-                    <i class="fa-solid fa-circle-half-stroke"></i> <span class="nav-text">Tema</span>
-                </button>
+            <nav style="flex: 1;">
+                <a href="#" class="nav-link nav-link--active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+                <a href="#" class="nav-link"><i class="fa-solid fa-folder-open"></i> Meus Projetos</a>
+                <a href="#" class="nav-link"><i class="fa-solid fa-star"></i> Favoritos</a>
             </nav>
-            <button class="btn btn--outline btn--icon" id="logout-btn" title="Sair"><i class="fa-solid fa-power-off"></i></button>
+            <div style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--color-border);">
+                <button class="nav-link" data-theme-toggle style="background:none; border:none; width:100%; cursor:pointer;">
+                    <i class="fa-solid fa-circle-half-stroke"></i> Tema
+                </button>
+                <button class="btn btn--outline btn--block" id="logout-btn" style="margin-top: 12px;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair
+                </button>
+            </div>
         </aside>
 
-        <main class="main-content">
-            <div class="section-container">
-                <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
-                    <h1 style="font-size: 1.8rem; margin: 0;">Olá, <span id="user-display">Dev</span></h1>
-                    <div class="glass-panel" style="padding: 8px 16px; font-size: 0.8rem; font-weight: bold; color: var(--color-primary);">PRO</div>
+        <!-- Main Content -->
+        <main class="main-content" style="grid-area: main; padding: 24px;">
+            <div class="section-container" style="max-width: 1000px; padding: 0;">
+                <header style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1 style="font-size: 1.5rem; font-weight: 800; margin: 0;">Olá, <span id="user-display">Dev</span></h1>
+                        <p style="color: var(--color-text-secondary); font-size: 0.9rem;">Pronto para sua próxima narrativa?</p>
+                    </div>
+                    <div class="glass-panel" style="padding: 8px 16px; border-radius: 100px; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--color-primary);">CONECTADO</span>
+                    </div>
                 </header>
 
-                <section class="glass-panel" style="padding: 24px; text-align: center;">
-                    <div style="display: flex; gap: 12px; max-width: 700px; margin: 0 auto;">
-                        <input type="url" id="repo-url" class="form-input" placeholder="URL do Repositório GitHub (ex: https://github.com/usuario/projeto)" style="height: 48px; flex: 1;">
-                        <button id="analyze-btn" class="btn btn--primary" style="height: 48px; width: 48px; padding: 0;" title="Analisar"><i class="fa-solid fa-bolt"></i></button>
+                <!-- Search/Input Area -->
+                <section class="dashboard-card" style="margin-bottom: 32px; border-style: dashed; border-width: 2px;">
+                    <div class="search-container">
+                        <input type="url" id="repo-url" class="form-input" placeholder="Cole a URL do seu Repositório GitHub" style="height: 56px; border-radius: 12px;">
+                        <button id="analyze-btn" class="btn btn--primary" style="height: 56px; min-width: 160px; border-radius: 12px; font-weight: 700;">
+                            <i class="fa-solid fa-bolt"></i> ANALISAR
+                        </button>
                     </div>
-                    <div id="loading-indicator" style="display: none; margin-top: 20px; color: var(--color-primary); font-weight: bold;">
-                        <i class="fa-solid fa-spinner fa-spin"></i> Processando sua narrativa... Isso pode levar alguns segundos.
+                <!-- Loading State (Skeletons) -->
+                <div id="loading-indicator" style="display: none; margin-top: 32px;">
+                    <div class="dashboard-grid">
+                        <aside class="dashboard-card skeleton-container" style="text-align: center; height: 300px;">
+                            <div class="skeleton-circle" style="width: 140px; height: 140px; margin: 0 auto 24px;"></div>
+                            <div class="skeleton-line" style="width: 60%; margin: 0 auto 12px;"></div>
+                            <div class="skeleton-line" style="width: 40%; margin: 0 auto;"></div>
+                        </aside>
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="dashboard-card skeleton-container" style="height: 160px;">
+                                <div class="skeleton-line" style="width: 30%; margin-bottom: 20px;"></div>
+                                <div class="skeleton-line" style="width: 90%; margin-bottom: 12px;"></div>
+                                <div class="skeleton-line" style="width: 85%;"></div>
+                            </div>
+                            <div class="dashboard-card skeleton-container" style="height: 200px;">
+                                <div class="skeleton-line" style="width: 40%; margin-bottom: 20px;"></div>
+                                <div class="skeleton-line" style="width: 70%; margin-bottom: 12px;"></div>
+                                <div class="skeleton-line" style="width: 75%;"></div>
+                            </div>
+                        </div>
                     </div>
+                    <p id="loading-msg" style="text-align: center; margin-top: 24px; font-weight: 700; color: var(--color-primary); letter-spacing: 0.5px;">Iniciando análise inteligente...</p>
+                </div>
                 </section>
 
-                <div id="results-area" style="display: none; margin-top: 32px;">
-                    <div style="margin-bottom: 24px;">
-                        <h2 style="font-size: 1.4rem; font-weight: 800;"><i class="fa-solid fa-book-bookmark"></i> Projeto: <span id="res-repo-name" style="color: var(--color-primary);">---</span></h2>
-                    </div>
-                    <div class="result-grid">
-                        <aside class="glass-panel" style="padding: 24px; text-align: center; align-self: start;">
-                            <div id="score-gauge" style="--score: 0; position: relative; width: 120px; height: 120px; margin: 0 auto 16px;">
-                                <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
-                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--color-border)" stroke-width="3" />
-                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--color-primary)" stroke-width="3" stroke-dasharray="0, 100" id="gauge-path" style="transition: stroke-dasharray 1s ease-out;" />
-                                </svg>
-                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.8rem; font-weight: 900; color: var(--color-primary);" id="tech-score-val">0</div>
+                <!-- Empty State (Hidden when results appear) -->
+                <div id="empty-state" style="text-align: center; padding: 60px 24px;">
+                    <i class="fa-solid fa-diagram-project" style="font-size: 4rem; color: var(--color-primary-light); margin-bottom: 24px;"></i>
+                    <h3 style="font-weight: 800; margin-bottom: 8px;">Nenhuma análise iniciada</h3>
+                    <p style="color: var(--color-text-secondary); max-width: 400px; margin: 0 auto;">Insira a URL de um repositório público para transformar seu código em uma narrativa profissional de alto impacto.</p>
+                </div>
+
+                <!-- Results Area -->
+                <div id="results-area" style="display: none;">
+                    <div class="dashboard-grid">
+                        <aside class="dashboard-card" style="text-align: center; height: fit-content;">
+                            <h4 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-secondary); margin-bottom: 24px;">Tech Authority Score</h4>
+                            <div class="gauge-container">
+                                <div style="position: relative; width: 160px; height: 160px; margin: 0 auto;">
+                                    <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--color-border)" stroke-width="2.5" />
+                                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--color-primary)" stroke-width="2.5" stroke-dasharray="0, 100" id="gauge-path" style="transition: stroke-dasharray 1.5s cubic-bezier(0.4, 0, 0.2, 1); stroke-linecap: round;" />
+                                    </svg>
+                                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                        <span id="tech-score-val" style="font-size: 2.5rem; font-weight: 900; color: var(--color-primary); display: block; line-height: 1;">0</span>
+                                        <span style="font-size: 0.65rem; font-weight: 800; opacity: 0.5;">PONTOS</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700; opacity: 0.6; margin-bottom: 16px;">Tech Score</div>
-                            <div id="stack-tags" style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;"></div>
+                            <div id="stack-tags" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 24px;"></div>
                         </aside>
 
-                        <div id="ats-result" style="display: flex; flex-direction: column; gap: 20px;">
-                            <!-- Conteúdo injetado via JS -->
+                        <div id="ats-result" style="display: flex; flex-direction: column; gap: 24px;">
+                            <!-- Injected via JS -->
                         </div>
                     </div>
                 </div>
             </div>
         </main>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="mobile-nav">
+            <a href="#" class="nav-link nav-link--active"><i class="fa-solid fa-chart-pie"></i><span>Home</span></a>
+            <a href="#" class="nav-link"><i class="fa-solid fa-folder-open"></i><span>Projetos</span></a>
+            <a href="#" class="nav-link" data-theme-toggle><i class="fa-solid fa-circle-half-stroke"></i><span>Tema</span></a>
+            <a href="#" id="mobile-logout" class="nav-link"><i class="fa-solid fa-power-off"></i><span>Sair</span></a>
+        </nav>
     </div>
+
+    <style>
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+    </style>
+
     <script type="module" src="js/main.js"></script>
     <script type="module">
         import { AuthManager } from './js/auth.js';
         AuthManager.requireAuth();
-        document.getElementById('logout-btn').addEventListener('click', () => AuthManager.logout());
+        const logout = () => AuthManager.logout();
+        document.getElementById('logout-btn').addEventListener('click', logout);
+        document.getElementById('mobile-logout').addEventListener('click', logout);
     </script>
 </body>
 </html>
