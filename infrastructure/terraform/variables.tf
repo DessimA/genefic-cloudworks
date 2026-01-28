@@ -28,14 +28,24 @@ variable "ollama_endpoint" {
   default     = "http://ollama:11434"
 }
 
-variable "ollama_model" {
-  description = "Modelo a ser usado no Ollama"
+variable "primary_model" {
+  description = "Modelo principal a ser usado no Ollama"
   type        = string
-  default     = "gpt-oss:120b-cloud"
+}
+
+variable "fallback_model" {
+  description = "Modelo de fallback a ser usado no Ollama"
+  type        = string
 }
 
 variable "ollama_api_key" {
   description = "Chave de API do Ollama Cloud"
+  type        = string
+  default     = ""
+}
+
+variable "github_token" {
+  description = "GitHub Personal Access Token"
   type        = string
   default     = ""
 }

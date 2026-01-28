@@ -24,8 +24,10 @@ module "lambda" {
   s3_bucket_name      = module.s3.bucket_name
   dynamodb_table_name = module.dynamodb.table_name
   ollama_endpoint     = var.ollama_endpoint
-  ollama_model        = var.ollama_model
+  primary_model       = var.primary_model
+  fallback_model      = var.fallback_model
   ollama_api_key      = var.ollama_api_key
+  github_token        = var.github_token
 }
 
 module "api_gateway" {

@@ -18,8 +18,10 @@ resource "aws_lambda_function" "upload_lambda" {
       BUCKET_NAME             = var.s3_bucket_name
       DYNAMODB_TABLE          = var.dynamodb_table_name
       OLLAMA_ENDPOINT         = var.ollama_endpoint
-      OLLAMA_MODEL            = var.ollama_model
+      PRIMARY_MODEL           = var.primary_model
+      FALLBACK_MODEL          = var.fallback_model
       OLLAMA_API_KEY          = var.ollama_api_key
+      GITHUB_TOKEN            = var.github_token
       POWERTOOLS_SERVICE_NAME = "analyze-service"
     }
   }
