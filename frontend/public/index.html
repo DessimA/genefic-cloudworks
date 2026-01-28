@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components/buttons.css">
     <link rel="stylesheet" href="css/components/footer.css">
+    <link rel="stylesheet" href="css/components/header.css">
     <style>
         .nav-header { padding: 12px 0; background: var(--color-surface); backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--color-border); }
         .hero-section { padding: 60px 0; text-align: center; }
@@ -44,10 +45,43 @@
                 <img src="assets/logo.png" alt="Logo" style="height: 30px;">
                 <span style="font-weight: 800; font-size: 1.1rem; color: var(--color-primary);">GENEFIC</span>
             </div>
-            <div style="display: flex; gap: 12px; align-items: center;">
+            
+            <!-- Desktop Nav -->
+            <div class="desktop-nav" style="display: flex; gap: 12px; align-items: center;">
                 <button class="btn btn--ghost btn--icon" data-theme-toggle title="Tema"><i class="fa-solid fa-moon"></i></button>
                 <a href="login.html" class="btn btn--outline btn--sm">Entrar</a>
                 <a href="login.html" class="btn btn--primary btn--sm">Começar</a>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <button class="mobile-menu-toggle btn btn--ghost btn--icon" style="display: none;">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Overlay -->
+        <div class="mobile-menu-overlay">
+            <div class="mobile-menu-content">
+                <div class="mobile-menu-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="assets/logo.png" alt="Logo" style="height: 24px;">
+                        <span style="font-weight: 800; color: var(--color-primary);">GENEFIC</span>
+                    </div>
+                    <button class="mobile-menu-close btn btn--ghost btn--icon">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <nav class="mobile-menu-nav">
+                    <a href="login.html" class="btn btn--outline btn--lg"><i class="fa-solid fa-right-to-bracket"></i> Entrar</a>
+                    <a href="login.html" class="btn btn--primary btn--lg"><i class="fa-solid fa-bolt"></i> Começar Agora</a>
+                </nav>
+
+                <div class="mobile-menu-footer">
+                    <button class="btn btn--ghost btn--block" data-theme-toggle style="justify-content: flex-start; gap: 12px;">
+                        <i class="fa-solid fa-moon"></i> Alternar Tema
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -160,6 +194,9 @@
         </div>
     </footer>
 
+    <button id="back-to-top" class="btn btn--primary btn--icon shadow-lg" title="Voltar ao topo" style="position: fixed; bottom: 32px; right: 24px; width: 48px; height: 48px; border-radius: 50%; display: none;">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

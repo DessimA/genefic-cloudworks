@@ -23,8 +23,6 @@ export class UploadManager {
   }
 
   async handleAnalysis(repoUrl) {
-    this.toast.show(`Iniciando Análise Estratégica...`, 'info');
-    
     // UI States
     this.analyzeBtn.disabled = true;
     this.analyzeBtn.innerHTML = '<i class="fa-solid fa-brain fa-fade"></i>';
@@ -133,7 +131,7 @@ export class UploadManager {
 
     document.querySelector('#ats-result').innerHTML = `
       <div class="dashboard-card" style="border-left: 4px solid var(--color-primary); position: relative;">
-          <button class="btn btn--ghost btn--sm" style="position: absolute; top: 16px; right: 16px;" onclick="navigator.clipboard.writeText(\`${data.ats_summary}\`).then(() => alert('Copiado!'))" title="Copiar"><i class="fa-solid fa-copy"></i></button>
+          <button class="btn btn--ghost btn--sm btn-copy" style="position: absolute; top: 16px; right: 16px;" title="Copiar"><i class="fa-solid fa-copy"></i></button>
           <h4 style="font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
             <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--color-primary);"></i> Narrativa Profissional (ATS)
           </h4>
@@ -169,6 +167,12 @@ export class UploadManager {
       </div>
     `;
 
+    // Configurar botão de cópia após a injeção do HTML
+    const copyBtn = document.querySelector('.btn-copy');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => this.copyToClipboard(data.ats_summary));
+    }
+
     const stackTagsEl = document.querySelector('#stack-tags');
     if (stackTagsEl) {
       stackTagsEl.innerHTML = (data.technologies || []).map(t => `
@@ -183,8 +187,30 @@ export class UploadManager {
     this.resetButton();
   }
 
+  async copyToClipboard(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      this.toast.show('Copiado para a área de transferência!', 'success');
+    } catch (err) {
+      this.toast.show('Falha ao copiar texto.', 'error');
+    }
+  }
+
   resetButton() {
     this.analyzeBtn.disabled = false;
-    this.analyzeBtn.innerHTML = '<i class="fa-solid fa-bolt"></i>';
+    this.analyzeBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> ANALISAR';
   }
 }

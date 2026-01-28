@@ -14,28 +14,98 @@ class App {
     this.theme.init();
     renderTeam();
     this.initTyped();
+    this.initMobileMenu();
+    this.initBackToTop();
     
     if (document.getElementById('analyze-btn')) {
         this.upload.init();
     }
   }
 
+  initBackToTop() {
+    const btn = document.getElementById('back-to-top');
+    if (!btn) return;
+
+    const checkScroll = () => {
+      // Detecção de scroll ultra-robusta para mobile/desktop
+      const scrolled = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      
+      if (scrolled > 300) {
+        btn.style.display = 'flex';
+        setTimeout(() => {
+          btn.style.opacity = '1';
+          btn.style.transform = 'translateY(0)';
+        }, 10);
+      } else {
+        btn.style.opacity = '0';
+        btn.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+          const currentScrolled = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+          if (currentScrolled <= 300) {
+            btn.style.display = 'none';
+          }
+        }, 300);
+      }
+    };
+
+    window.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('touchmove', checkScroll, { passive: true }); // Reforço para mobile
+    
+    btn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  initMobileMenu() {
+    const toggle = document.querySelector('.mobile-menu-toggle');
+    const close = document.querySelector('.mobile-menu-close');
+    const overlay = document.querySelector('.mobile-menu-overlay');
+    const menuContent = document.querySelector('.mobile-menu-content');
+
+    const openMenu = () => {
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeMenu = () => {
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    if (toggle) toggle.addEventListener('click', openMenu);
+    if (close) close.addEventListener('click', closeMenu);
+
+    // Close on overlay click (but not on menu content)
+    overlay?.addEventListener('click', (e) => {
+      if (e.target === overlay) closeMenu();
+    });
+
+    // Close on link click
+    overlay?.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', closeMenu);
+    });
+  }
+
   initTyped() {
-    if (document.getElementById('typed-text')) {
-      new Typed('#typed-text', {
-        strings: [
-          'The Minds Behind GENEFIC',
-          'Cloud Solutions Experts',
-          'AI-Powered Career Growth',
-          'Built by Group 3'
-        ],
-        typeSpeed: 50,
-        backSpeed: 30,
-        backDelay: 2000,
-        loop: true,
-        showCursor: true,
-        cursorChar: '|'
-      });
+    if (document.getElementById('typed-text') && typeof Typed !== 'undefined') {
+      try {
+        new Typed('#typed-text', {
+          strings: [
+            'The Minds Behind GENEFIC',
+            'Cloud Solutions Experts',
+            'AI-Powered Career Growth',
+            'Built by Group 3'
+          ],
+          typeSpeed: 50,
+          backSpeed: 30,
+          backDelay: 2000,
+          loop: true,
+          showCursor: true,
+          cursorChar: '|'
+        });
+      } catch (e) {
+        console.error("Erro ao inicializar Typed.js:", e);
+      }
     }
   }
 }
