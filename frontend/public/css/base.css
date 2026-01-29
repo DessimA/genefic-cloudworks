@@ -1,13 +1,45 @@
 /* --- Global & Theme Base --- */
-body {
-  margin: 0;
-  font-family: var(--font-main);
-  color: var(--color-text-primary);
-  min-height: 100vh;
-  position: relative;
+html, body {
   overflow-x: hidden;
+  width: 100%;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  max-width: 100vw;
+}
+
+body {
+  min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  line-height: var(--leading-normal);
+  font-family: var(--font-main);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-base), color var(--transition-base);
+  overflow-wrap: break-word;
+  hyphens: auto;
   display: flex;
   flex-direction: column;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: 8px;
+  z-index: 10000;
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 body::before {
@@ -25,13 +57,13 @@ body::before {
 .section-container {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 0 48px;
+  padding: 0 var(--spacing-6);
   box-sizing: border-box;
   width: 100%;
 }
 
-@media (max-width: 768px) {
-  .section-container { padding: 0 24px; }
+ @media (min-width: 768px) {
+  .section-container { padding: 0 var(--spacing-12); }
 }
 
 .glass-panel {
@@ -43,40 +75,69 @@ body::before {
   border-radius: var(--radius-panel);
 }
 
+/* --- Responsive Grid System --- */
+.responsive-grid {
+  display: grid;
+  gap: var(--spacing-6);
+  grid-template-columns: 1fr;
+}
+
+ @media (min-width: 480px) {
+  .responsive-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+ @media (min-width: 768px) {
+  .responsive-grid { 
+    gap: var(--spacing-8);
+    grid-template-columns: repeat(2, 1fr); 
+  }
+}
+
+ @media (min-width: 1024px) {
+  .responsive-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+ @media (min-width: 1280px) {
+  .responsive-grid { 
+    gap: var(--spacing-12);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  }
+}
+
 /* --- Team Highlight Section --- */
 .team-section {
   padding: 100px 0;
   text-align: center;
 }
 
-/* Grid Equilibrado: 6 > 3+3 > 2+2+2 > 1 */
 .team-grid {
   display: grid;
-  gap: 32px;
+  gap: var(--spacing-8);
   margin-top: 60px;
   grid-template-columns: 1fr;
 }
 
-@media (min-width: 480px) {
+ @media (min-width: 480px) {
   .team-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (min-width: 850px) {
+ @media (min-width: 768px) {
   .team-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-@media (min-width: 1150px) {
-  .team-grid { grid-template-columns: repeat(6, 1fr); gap: 20px; }
+ @media (min-width: 1024px) {
+  .team-grid { grid-template-columns: repeat(6, 1fr); gap: var(--spacing-4); }
 }
 
 .team-card {
-  padding: 32px 20px;
+  padding: var(--spacing-8) var(--spacing-4);
   transition: var(--transition);
   border: 1px solid transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+
 
 .team-card:hover {
   transform: translateY(-10px);
@@ -172,12 +233,32 @@ body::before {
 }
 
 #back-to-top {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  z-index: 99999 !important; /* Prioridade máxima */
-  position: fixed !important;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all var(--transition-base), visibility 0s linear var(--transition-base);
+  z-index: 9999;
+  position: fixed;
+  bottom: var(--spacing-8);
+  right: var(--spacing-8);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+}
+
+#back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: all var(--transition-base), visibility 0s;
+}
+
+ @media (max-width: 1023px) {
+  #back-to-top {
+    bottom: calc(64px + var(--spacing-4));
+    right: var(--spacing-4);
+  }
 }

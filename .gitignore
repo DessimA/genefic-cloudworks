@@ -20,7 +20,7 @@ venv/
 # Build & Lambda
 **/dist/
 **/lambda.zip
-frontend/js/config.js
+**/config.js
 
 # Temporary Scripts
 setup_git.sh

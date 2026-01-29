@@ -14,11 +14,17 @@
   white-space: nowrap;
 }
 
+.btn:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--color-primary-light);
+}
+
 .btn--icon {
   width: 42px;
   height: 42px;
   padding: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
