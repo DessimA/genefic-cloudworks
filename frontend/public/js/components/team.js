@@ -32,6 +32,8 @@ export function renderTeam() {
                     <img src="${finalPhoto}" 
                          alt="${member.name}" 
                          class="avatar-img"
+                         loading="lazy"
+                         decoding="async"
                          onerror="this.src='${initialsPhoto}'">
                 </div>
                 <div class="team-name">${member.name}</div>

@@ -12,6 +12,13 @@ export class ThemeManager {
   }
 
   applyTheme(theme) {
+    // Prevenir transições durante carregamento inicial
+    const isInitial = !document.documentElement.hasAttribute('data-theme');
+    
+    if (isInitial) {
+      document.documentElement.classList.add('no-theme-transition');
+    }
+    
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem(this.storageKey, theme);
     this.theme = theme;
@@ -24,6 +31,13 @@ export class ThemeManager {
       }
     });
     
+    if (isInitial) {
+      // Remover classe após render
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove('no-theme-transition');
+      });
+    }
+
     // Dispara evento para outros componentes se necessário
     window.dispatchEvent(new CustomEvent('themechanged', { detail: { theme } }));
   }

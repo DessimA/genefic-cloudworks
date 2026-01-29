@@ -26,33 +26,38 @@ class App {
     const btn = document.getElementById('back-to-top');
     if (!btn) return;
 
-    const checkScroll = () => {
-      // Detecção de scroll ultra-robusta para mobile/desktop
-      const scrolled = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    let ticking = false;
+
+    const updateButton = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       
-      if (scrolled > 300) {
-        btn.style.display = 'flex';
-        setTimeout(() => {
-          btn.style.opacity = '1';
-          btn.style.transform = 'translateY(0)';
-        }, 10);
+      if (scrollTop > 300) {
+        btn.classList.add('visible');
       } else {
-        btn.style.opacity = '0';
-        btn.style.transform = 'translateY(10px)';
-        setTimeout(() => {
-          const currentScrolled = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-          if (currentScrolled <= 300) {
-            btn.style.display = 'none';
-          }
-        }, 300);
+        btn.classList.remove('visible');
+        // Remove o foco se o botão for escondido enquanto focado
+        if (document.activeElement === btn) {
+          btn.blur();
+        }
+      }
+      
+      ticking = false;
+    };
+
+    const requestTick = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateButton);
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', checkScroll, { passive: true });
-    window.addEventListener('touchmove', checkScroll, { passive: true }); // Reforço para mobile
+    window.addEventListener('scroll', requestTick, { passive: true });
     
     btn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+      });
     });
   }
 
