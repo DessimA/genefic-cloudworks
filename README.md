@@ -9,7 +9,7 @@ O **GENEFIC Cloudworks** é um ecossistema de engenharia de carreira *AI-Native*
 2.  [**Arquitetura de Sistemas: O Blueprint Serverless**](#-2-arquitetura-de-sistemas-o-blueprint-serverless)
 3.  [**Rationale: O Porquê das Decisões de Engenharia**](#-3-rationale-o-porquê-das-decisões-de-engenharia)
 4.  [**Implementação do Backend: O Motor de Análise**](#-4-implementação-do-backend-o-motor-de-análise)
-5.  [**Deep Content Analysis (DCE): Algoritmos de Auditoria**](#-5-deep-content-analysis-dce-algoritmos-de-auditoria)
+5.  [**Deep Content Analysis (DCA): Algoritmos de Auditoria**](#-5-deep-content-analysis-dca-algoritmos-de-auditoria)
 6.  [**Motor de Inteligência Artificial: Inferência e Prompting**](#-6-motor-de-inteligência-artificial-inferência-e-prompting)
 7.  [**Dicionário de Dados e Persistência NoSQL**](#-7-dicionário-de-dados-e-persistência-nosql)
 8.  [**Infraestrutura como Código (IaC): Terraform Modular**](#-8-infraestrutura-como-código-iac-terraform-modular)
@@ -18,9 +18,8 @@ O **GENEFIC Cloudworks** é um ecossistema de engenharia de carreira *AI-Native*
 11. [**Frontend: UX de Alta Performance e SPA**](#-11-frontend-ux-de-alta-performance-e-spa)
 12. [**DevOps: Pipeline de CI/CD e Automação Local**](#-12-devops-pipeline-de-cicd-e-automação-local)
 13. [**Matriz de Erros e Troubleshooting**](#-13-matriz-de-erros-e-troubleshooting)
-14. [**Registro de Decisões de Arquitetura (ADR)**](#-14-registro-de-decisões-de-arquitetura-adr)
-15. [**Manual do Desenvolvedor: Onboarding e Debugging**](#-15-manual-do-desenvolvedor-onboarding-e-debugging)
-16. [**Roadmap de Engenharia e Visão de Futuro**](#-16-roadmap-de-engenharia-e-visão-de-futuro)
+14. [**Manual do Desenvolvedor: Onboarding e Debugging**](#-14-manual-do-desenvolvedor-onboarding-e-debugging)
+15. [**Roadmap de Engenharia e Visão de Futuro**](#-15-roadmap-de-engenharia-e-visão-de-futuro)
 
 ---
 
@@ -30,7 +29,7 @@ O **GENEFIC Cloudworks** é um ecossistema de engenharia de carreira *AI-Native*
 No mercado de recrutamento de software, existe um abismo entre o que um desenvolvedor constrói e o que um recrutador percebe. Repositórios GitHub são provas de conceito vivas, mas sua complexidade os torna invisíveis para sistemas de triagem (**ATS**).
 
 ### 1.2 A Missão: Auditoria Cognitiva Automatizada
-O GENEFIC atua como uma camada de inteligência que audita o código bruto, identifica padrões de design (ex: SOLID, Clean Architecture), maturidade de testes e complexidade de infraestrutura, convertendo esses dados em uma narrativa profissional validada por evidências.
+O GENEFIC atua como uma camada de inteligência que audita o código bruto, identifica padrões de design (ex: SOLID, Clean Architecture), maturidade de testes e complexidade de infraestrutura, convertendo esses dados em uma narrativa profissional validada por evidências técnicas reais.
 
 ---
 
@@ -42,7 +41,7 @@ O sistema foi desenhado para ser **Event-Driven**, **Stateless** e **Altamente D
 ```mermaid
 graph TD
     %% Atores
-    User((Usuário)) -->|Interação SPA| WebUI[Frontend - S3/CloudFront]
+    User((Usuário)) -->|Interação SPA| WebUI[Frontend - S3 Website]
     
     %% Camada de API
     WebUI -->|API Calls| APIGW[Amazon API Gateway]
@@ -52,203 +51,143 @@ graph TD
         LambdaTrigger -->|Evento Assíncrono| LambdaWorker[Lambda Analyse: Worker]
         
         %% Workflow do Worker
-        LambdaWorker -->|1. Fetch| GitHub[GitHub API v3]
-        LambdaWorker -->|2. Inference| AI[Ollama/Bedrock Engine]
+        LambdaWorker -->|1. Fetch Docs| GitHub[GitHub API v3]
+        LambdaWorker -->|2. Inference| AI[Groq Cloud / Llama 3]
         LambdaWorker -->|3. Persistence| DDB[(DynamoDB: Metadata)]
-        LambdaWorker -->|4. Storage| S3[(S3: Generated Portfolios)]
     end
 
     %% Detalhes de Redes e Observabilidade
-    LambdaWorker -->|Logs| CW[CloudWatch Logs]
-    LambdaWorker -->|Traces| XRay[AWS X-Ray]
+    LambdaWorker -->|Logs| CW[CloudWatch Logs / LocalStack]
 ```
 
 ### 2.2 Ciclo de Vida de uma Task (Status Machine)
-1.  **CREATED**: Registro inicial no DynamoDB via Lambda Trigger.
-2.  **PROCESSING**: O Worker assume a tarefa, inicia o fetch de dados e a inferência de IA.
-3.  **COMPLETED**: Dados estruturados salvos e portfólio gerado.
-4.  **FAILED**: Erro capturado, logado e persistido para feedback ao usuário.
+1.  **PROCESSING**: Registro inicial no DynamoDB. O Worker assume a tarefa e inicia o fetch.
+2.  **COMPLETED**: Análise concluída, JSON estruturado e Score gerado.
+3.  **FAILED**: Erro capturado (ex: Rate Limit, Timeout ou IA) e persistido para feedback.
 
 ---
 
 ## 🏗️ 3. Rationale: O Porquê das Decisões de Engenharia
 
 ### 3.1 Escolha da Stack de Computação: AWS Lambda
-*   **Isolamento:** Cada análise roda em um ambiente de execução isolado (MicroVM Firecracker). Isso garante que vazamentos de memória ou bugs em uma análise não afetem a estabilidade global.
-*   **Economia Operacional:** Em um ambiente de startup ou MVP, o custo-zero em repouso é fundamental. O projeto não consome recursos financeiros enquanto não há usuários.
+*   **Isolamento:** Cada análise roda em um ambiente de execução isolado.
+*   **Performance:** Configurada com **256MB** para equilibrar custo e velocidade de processamento de contexto de IA.
 
 ### 3.2 Escolha da Stack de Dados: DynamoDB
-*   **Escalabilidade Sem Atrito:** O DynamoDB lida com aumentos repentinos de carga sem necessidade de redimensionamento de clusters ou gestão de conexões (Connection Pooling).
-*   **Single Table Design:** Utilizamos chaves de partição (`user_id`) e classificação (`timestamp`) para permitir que todos os metadados de um usuário sejam recuperados em uma única consulta de baixa latência.
+*   **Single Table Design:** Chaves `user_id` e `timestamp` permitem recuperação instantânea do histórico de análises.
+*   **TTL (Time to Live):** Metadados temporários expiram automaticamente, reduzindo custos de armazenamento.
 
-### 3.3 Escolha da Stack de IA: Ollama (Adapter Pattern)
-*   **Hosting Local de Modelos:** Durante o desenvolvimento, o uso do Ollama elimina custos de latência de rede e tokens de APIs externas (OpenAI/Anthropic).
-*   **Privacidade:** O código analisado nunca sai da rede local (ou VPC em prod), garantindo a segurança da propriedade intelectual do desenvolvedor analisado.
+### 3.3 Escolha da Stack de IA: Groq Cloud (Llama 3.3)
+*   **Baixa Latência:** A Groq oferece a inferência mais rápida do mercado, essencial para um feedback de UX em tempo real.
+*   **Capacidade de Contexto:** Permite analisar múltiplos arquivos (README, Pom.xml, etc.) simultaneamente sem degradação de performance.
+*   **Fallback Strategy:** Alternância automática entre modelos `versatile` e `instant`.
 
 ---
 
 ## 💻 4. Implementação do Backend: O Motor de Análise
 
-O backend reside em `backend/lambdas/analyse/handler.py` e é implementado seguindo padrões de **Clean Code**.
-
 ### 4.1 Separação Trigger vs Worker
-*   **Trigger:** É uma função síncrona leve. Ela valida o payload, gera o `task_id` (Unix Timestamp) e invoca o Worker via `InvocationType="Event"`. Isso libera o API Gateway em menos de 200ms.
-*   **Worker:** É a função pesada. Ela possui um timeout estendido (300s) e permissões de escrita no S3 e DynamoDB.
+*   **Trigger:** Valida a URL do GitHub e agenda o trabalho. Retorna `202 Accepted` imediatamente.
+*   **Worker:** Executa a extração densa (`fetch_docs`) e a auditoria de IA.
 
-### 4.2 Gerenciamento de Memória e Contexto
-A Lambda Worker é configurada com 512MB de RAM para permitir o processamento de árvores de arquivos extensas sem causar *Out of Memory*.
-
----
-
-## 🔍 5. Deep Content Analysis (DCE): Algoritmos de Auditoria
-
-O módulo DCE executa uma auditoria em camadas:
-
-1.  **Camada de Topologia:** Usa o endpoint `/git/trees/{branch}?recursive=1`. O sistema filtra arquivos irrelevantes (imagens, binários, `node_modules`, `.git`) para focar apenas em metadados técnicos.
-2.  **Camada de Dependências:** O parser identifica o ecossistema tecnológico. 
-    *   Ex: Se encontrar `pydantic`, identifica maturidade em validação de dados Python.
-    *   Ex: Se encontrar `bcrypt`, identifica preocupação com segurança de senhas.
-3.  **Camada de DevOps:** Analisa arquivos em `.github/workflows` para identificar o nível de automação do projeto (CI/CD).
-4.  **Camada de Qualidade:** Verifica a proporção de arquivos de teste em relação ao código fonte.
+### 4.2 Lazy Initialization
+Os clientes AWS e Groq são inicializados apenas sob demanda (padrão *Singleton/Lazy*), otimizando o tempo de *Cold Start* da Lambda.
 
 ---
 
-## 🤖 6. Motor de Inteligência Artificial: Inferência e Prompting
+## 🔍 5. Deep Content Analysis (DCA): Algoritmos de Auditoria
 
-### 6.1 Engenharia de Prompt (System Instruction)
-O prompt é desenhado para ser um **Auditor Técnico**, não um assistente de chat.
-*   **Restrições:** Proibição de elogios. Obrigatoriedade de citar arquivos.
-*   **Output Format:** JSON estrito.
+O motor de auditoria não olha apenas nomes de arquivos, ele extrai o DNA técnico:
 
-### 6.2 Estratégia de Fallback Dinâmico
-```python
-models = [PRIMARY_MODEL, FALLBACK_MODEL]
-for model in models:
-    try:
-        # Tenta inferência...
-        return result
-    except Exception:
-        # Tenta próximo modelo...
-        continue
+1.  **Mapeamento de Estrutura:** Analisa a árvore completa do repo (até 100 caminhos).
+2.  **Extração Prioritária (DCA v2):** Captura até 8 arquivos críticos incluindo:
+    *   **Java/Spring:** `pom.xml`, `build.gradle`, `application.yml`.
+    *   **Node/Python:** `package.json`, `requirements.txt`.
+    *   **Infra:** `Dockerfile`, `docker-compose.yml`.
+3.  **Análise de Documentação:** Lê até 4000 caracteres do `README.md` para entender a proposta de valor do projeto.
+
+---
+
+## 🤖 6. Motor de Inteligência Artificial: Auditoria Técnica
+
+### 6.1 Auditor System Prompt
+O motor da Groq opera sob o modo **'GENEFIC AUDITOR'**:
+*   **Fato vs Sugestão:** Se uma tecnologia já está no código, a IA é proibida de sugeri-la como melhoria.
+*   **Evidências:** Cada conquista deve ser baseada em um arquivo ou trecho detectado.
+*   **JSON Only:** Resposta pura em JSON, sem formatação Markdown para integração direta com o frontend.
+
+---
+
+## 📊 7. Dicionário de Dados
+
+### 7.1 Esquema `genefic-local-metadata`
+*   **`tech_score`**: 0-100 (Rubrica baseada em complexidade e maturidade).
+*   **`ats_summary`**: Narrativa profissional densa para cargos Senior/Staff.
+*   **`key_achievements`**: Lista de conquistas comprovadas.
+*   **`improvements`**: Melhorias reais que ainda não foram implementadas.
+
+---
+
+## 🛠️ 8. Infraestrutura como Código (IaC)
+
+Organização modular em Terraform:
+*   **`api_gateway`**: Interface REST com CORS e Gateway Responses resilientes.
+*   **`lambda`**: Gestão de lifecycle, empacotamento automatizado e injeção de env vars.
+*   **`dynamodb`**: Tabelas NoSQL com auto-scaling simulado via LocalStack.
+
+---
+
+## 🛑 9. Estratégia de Resiliência
+
+### 9.1 GitHub Rate Limit
+*   **Token-Aware:** O uso do `GITHUB_TOKEN` eleva o limite para 5.000 req/h.
+*   **Retry Logic:** Backoff exponencial para erros temporários do GitHub (502/503/504).
+
+---
+
+## ⚙️ 10. DevOps: Automação Local
+
+### 10.1 Script `deploy-local.sh`
+O pipeline local automatiza:
+1.  Limpeza completa do ambiente (`.localstack` e `terraform.tfstate`).
+2.  Orquestração via `docker-compose`.
+3.  Packaging da Lambda com `chmod` recursivo para permissões de runtime.
+4.  Apply do Terraform e Sync do S3 Website.
+5.  **Teste de Consistência:** Execução do script `verify_consistency.py` para validar a API.
+
+---
+
+## ❌ 11. Matriz de Erros
+
+| Código | Descrição | Ação |
+| :--- | :--- | :--- |
+| `IA-500` | Falha na Inferência Groq | Verifique a validade da `GROQ_API_KEY`. |
+| `GRL-403` | GitHub Rate Limit | Configure um novo Token clássico no `.env`. |
+| `502 Bad Gateway` | Crash na Lambda | Verifique os logs: `docker logs genefic-localstack`. |
+
+---
+
+## 🛠️ 12. Manual do Desenvolvedor
+
+### 12.1 Pré-requisitos
+*   Docker & Docker Compose.
+*   Terraform (v1.5+).
+*   Conta na [Groq Cloud](https://console.groq.com/) para obter a API Key.
+
+### 12.2 Configuração (.env)
+```bash
+GROQ_API_KEY=gsk_...
+GITHUB_TOKEN=ghp_...
+PRIMARY_MODEL=llama-3.3-70b-versatile
+FALLBACK_MODEL=llama-3.1-8b-instant
 ```
-Isso garante que, se um modelo grande estiver offline ou lento no Ollama, um modelo mais leve assuma a tarefa.
 
----
-
-## 📊 7. Dicionário de Dados e Persistência NoSQL
-
-### 7.1 Esquema da Tabela `genefic-metadata`
-*   **`user_id` (Hash):** Identificador do usuário (Default: `anonymous`).
-*   **`timestamp` (Range):** Chave de ordenação.
-*   **`structured_data` (Map):** Contém o resultado da IA:
-    *   `tech_score`: 0-100.
-    *   `ats_summary`: Narrativa profissional.
-    *   `key_achievements`: Conquistas baseadas em arquivos.
-    *   `technologies`: Lista de ferramentas detectadas.
-*   **`expires_at` (TTL):** Unix Epoch para deleção automática após 24h.
-
----
-
-## 🛠️ 8. Infraestrutura como Código (IaC): Terraform Modular
-
-O Terraform é organizado em módulos reutilizáveis em `infrastructure/terraform/modules/`:
-
-1.  **`api_gateway`**: Define a interface REST e as Gateway Responses para CORS.
-2.  **`dynamodb`**: Configura tabelas com suporte a TTL e Pay-per-request.
-3.  **`iam`**: Define as políticas de **Menor Privilégio**.
-4.  **`lambda`**: Gerencia o empacotamento, variáveis de ambiente e configurações de rede.
-5.  **`s3`**: Configura buckets para hospedagem e armazenamento de portfólios.
-
----
-
-## 🔐 9. Segurança da Informação e Gestão de Segredos
-
-### 9.1 Gestão de Segredos (Secrets)
-*   **Zero Hardcode:** Nenhuma credencial é escrita em código.
-*   **Variáveis Sensíveis:** O Terraform usa variáveis marcadas como `sensitive` para evitar logs acidentais de tokens.
-*   **Injeção em Runtime:** O `GITHUB_TOKEN` é injetado apenas nas Lambdas que precisam de acesso à API externa.
-
-### 9.2 Ofuscação de Stack
-Conforme as melhores práticas de segurança, os nomes dos modelos de IA não são fixos no código, impedindo que um atacante saiba exatamente qual modelo está sendo usado e explore vulnerabilidades conhecidas desse modelo.
-
----
-
-## 🛑 10. Estratégia de Resiliência e Rate Limit Management
-
-### 10.1 GitHub Rate Limit Strategy
-1.  **Autenticação Obrigatória:** O uso do `GITHUB_TOKEN` eleva o limite para 5.000 requisições por hora.
-2.  **Backoff Exponencial:** O sistema aguarda tempos crescentes (2s, 4s, 8s) em caso de erro 503 (serviço indisponível) do GitHub.
-3.  **Rate Limit Awareness:** A Lambda Worker loga o limite restante após cada chamada, permitindo monitoramento preventivo via CloudWatch Alarms.
-
----
-
-## 🎨 11. Frontend: UX de Alta Performance e SPA
-
-O frontend em `frontend/public/` segue uma filosofia de **Zero Framework Overhead**.
-
-### 11.1 Glassmorphism & UI
-*   Uso intensivo de `backdrop-filter` e gradientes lineares.
-*   Layout responsivo nativo via CSS Grid e Flexbox.
-
-### 11.2 State Management & Polling
-O sistema implementa um **Polling Progressivo**:
-*   Inicia a cada 2 segundos.
-*   Aumenta o intervalo para 5, 10 e 15 segundos se a análise for longa.
-*   Para imediatamente após receber `COMPLETED` ou `FAILED`.
-
----
-
-## ⚙️ 12. DevOps: Pipeline de CI/CD e Automação Local
-
-### 12.1 Script `deploy-local.sh`
-1.  **Limpeza:** `docker-compose down -v`.
-2.  **Orquestração:** `docker-compose up -d`.
-3.  **Build de Artefatos:** Instalação de dependências via container Linux para paridade total com o ambiente AWS Lambda.
-4.  **Provisionamento:** `terraform apply -auto-approve`.
-5.  **Sincronização:** `aws s3 sync` para upload dos assets do frontend.
-
----
-
-## ❌ 13. Matriz de Erros e Troubleshooting
-
-| Código de Erro | Local | Causa Provável | Ação Corretiva |
-| :--- | :--- | :--- | :--- |
-| `GRL-403` | Lambda Worker | GitHub Rate Limit excedido | Verifique/Atualize o `GITHUB_TOKEN`. |
-| `IA-500` | Lambda Worker | Ollama falhou ou Modelo ausente | Rode `ollama pull [modelo]` ou verifique o endpoint. |
-| `DDB-400` | Lambda Trigger | Permissão IAM ou Erro de Chave | Verifique a política IAM no módulo `iam`. |
-| `API-404` | API Gateway | Recurso não implantado | Verifique o `terraform output api_id`. |
-
----
-
-## 📜 14. Registro de Decisões de Arquitetura (ADR)
-
-*   **ADR-001: Uso de urllib vs requests:** Escolhido `urllib` para reduzir o tamanho do pacote da Lambda e o tempo de *cold start*.
-*   **ADR-002: Persistência NoSQL:** Escolhido DynamoDB pela flexibilidade de esquema necessária para dados de IA variados.
-*   **ADR-003: Polling Progressivo:** Escolhido sobre WebSockets para reduzir custos operacionais no API Gateway e complexidade de estado.
-
----
-
-## 🛠️ 15. Manual do Desenvolvedor: Onboarding e Debugging
-
-### 15.1 Configuração do Ambiente
-1.  Instale Docker e Terraform.
-2.  Garanta que o Ollama esteja rodando em `localhost:11434`.
-3.  Configure o `.env` com seu `GITHUB_TOKEN`.
-
-### 15.2 Debugging de Lambdas
-Para ver logs em tempo real no LocalStack:
+### 12.3 Debugging Proativo
+Para monitorar a Lambda em tempo real:
 ```bash
 docker logs -f genefic-localstack
 ```
 
 ---
 
-## 🗺️ 16. Roadmap de Engenharia e Visão de Futuro
-
-*   **Q1 2026:** Integração com Amazon Bedrock (Claude 3 Haiku).
-*   **Q2 2026:** Geração de currículos em formato PDF otimizado.
-*   **Q3 2026:** Implementação de Webhooks para re-análise automática a cada `git push`.
-
----
-
-**Genefic Cloudworks** - *Engenharia de Elite. IA com Propósito.*
+**Genefic Cloudworks** - *Engenharia de Elite. Auditoria com Propósito.*
