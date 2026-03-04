@@ -4,11 +4,6 @@ variable "lambda_role_arn" {}
 variable "s3_bucket_name" {}
 variable "dynamodb_table_name" {}
 
-variable "ollama_endpoint" {
-  description = "Endpoint do Ollama"
-  type        = string
-}
-
 variable "primary_model" {
   description = "Modelo principal"
   type        = string
@@ -19,10 +14,10 @@ variable "fallback_model" {
   type        = string
 }
 
-variable "ollama_api_key" {
-  description = "Chave de API do Ollama"
+variable "groq_api_key" {
+  description = "Chave de API do Groq"
   type        = string
-  default     = ""
+  sensitive   = true
 }
 
 variable "github_token" {

@@ -22,26 +22,20 @@ variable "aws_endpoint" {
   default     = "http://localstack:4566"
 }
 
-variable "ollama_endpoint" {
-  description = "Endpoint do Ollama"
-  type        = string
-  default     = "http://ollama:11434"
-}
-
 variable "primary_model" {
-  description = "Modelo principal a ser usado no Ollama"
+  description = "Modelo principal a ser usado no Groq"
   type        = string
 }
 
 variable "fallback_model" {
-  description = "Modelo de fallback a ser usado no Ollama"
+  description = "Modelo de fallback a ser usado no Groq"
   type        = string
 }
 
-variable "ollama_api_key" {
-  description = "Chave de API do Ollama Cloud"
+variable "groq_api_key" {
+  description = "Chave de API do Groq"
   type        = string
-  default     = ""
+  sensitive   = true
 }
 
 variable "github_token" {
