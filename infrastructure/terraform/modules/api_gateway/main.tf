@@ -114,10 +114,30 @@ resource "aws_api_gateway_deployment" "portfolio_deploy" {
   depends_on = [
     aws_api_gateway_integration.lambda_upload,
     aws_api_gateway_integration.lambda_upload_get,
-    aws_api_gateway_integration.upload_options_integration
+    aws_api_gateway_integration.upload_options_integration,
+    aws_api_gateway_gateway_response.cors_4xx,
+    aws_api_gateway_gateway_response.cors_5xx,
+    aws_api_gateway_integration_response.upload_options_integration_response
   ]
 
   rest_api_id = aws_api_gateway_rest_api.portfolio_api.id
+  
+  # Força redesploi se qualquer recurso mudar
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.upload.id,
+      aws_api_gateway_method.upload_post.id,
+      aws_api_gateway_method.upload_get.id,
+      aws_api_gateway_method.upload_options.id,
+      aws_api_gateway_integration.lambda_upload.id,
+      aws_api_gateway_integration.lambda_upload_get.id,
+      aws_api_gateway_integration.upload_options_integration.id,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "dev" {

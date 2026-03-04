@@ -23,10 +23,9 @@ module "lambda" {
   lambda_role_arn     = module.iam.upload_role_arn
   s3_bucket_name      = module.s3.bucket_name
   dynamodb_table_name = module.dynamodb.table_name
-  ollama_endpoint     = var.ollama_endpoint
   primary_model       = var.primary_model
   fallback_model      = var.fallback_model
-  ollama_api_key      = var.ollama_api_key
+  groq_api_key        = var.groq_api_key
   github_token        = var.github_token
 }
 

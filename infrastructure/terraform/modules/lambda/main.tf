@@ -12,15 +12,15 @@ resource "aws_lambda_function" "upload_lambda" {
   handler          = "handler.handler"
   runtime          = "python3.11"
   timeout          = 300
+  memory_size      = 256
 
   environment {
     variables = {
       BUCKET_NAME             = var.s3_bucket_name
       DYNAMODB_TABLE          = var.dynamodb_table_name
-      OLLAMA_ENDPOINT         = var.ollama_endpoint
       PRIMARY_MODEL           = var.primary_model
       FALLBACK_MODEL          = var.fallback_model
-      OLLAMA_API_KEY          = var.ollama_api_key
+      GROQ_API_KEY            = var.groq_api_key
       GITHUB_TOKEN            = var.github_token
       POWERTOOLS_SERVICE_NAME = "analyze-service"
     }
