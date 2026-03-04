@@ -35,6 +35,11 @@ if [ -z "$FALLBACK_MODEL" ]; then
   MISSING_VARS=1
 fi
 
+if [ -z "$GROQ_API_KEY" ]; then
+  echo "❌ ERRO: GROQ_API_KEY não definido no .env"
+  MISSING_VARS=1
+fi
+
 if [ -z "$GITHUB_TOKEN" ]; then
   echo "⚠️ AVISO: GITHUB_TOKEN não definido. O sistema funcionará com limite reduzido (60 req/h)."
   # Não interrompemos por este, mas avisamos.
@@ -45,9 +50,16 @@ if [ $MISSING_VARS -eq 1 ]; then
   exit 1
 fi
 
+
 echo "🧹 Limpando ambiente anterior..."
 docker-compose -p genefic -f infrastructure/local/docker-compose.yml down --remove-orphans 2>/dev/null || true
 docker rm -f genefic-localstack genefic-dynamodb-admin 2>/dev/null || true
+
+# Garante limpeza completa do estado para evitar inconsistências
+echo "Dataset cleaning..."
+rm -f "$TF_DIR/terraform.tfstate" "$TF_DIR/terraform.tfstate.backup"
+rm -rf "$INFRA_DIR/.localstack"
+mkdir -p "$INFRA_DIR/.localstack"
 
 echo "🚀 Iniciando ambiente local..."
 docker-compose -p genefic --env-file .env -f infrastructure/local/docker-compose.yml up -d
@@ -62,20 +74,22 @@ echo -e "\n✅ LocalStack está pronto!"
 echo "📦 Preparando pacote da Lambda de Análise..."
 UPLOAD_LAMBDA_SRC="backend/lambdas/analyse/handler.py"
 UPLOAD_LAMBDA_DIST="backend/lambdas/dist"
+
+# Remove diretório completamente para garantir limpeza
+rm -rf "$PROJECT_ROOT/$UPLOAD_LAMBDA_DIST"
 mkdir -p "$PROJECT_ROOT/$UPLOAD_LAMBDA_DIST"
-rm -rf "$PROJECT_ROOT/$UPLOAD_LAMBDA_DIST/*"
 
 # Instala dependências e copia o handler
-docker run --rm -v "$PROJECT_ROOT:/app" -w /app python:3.11-slim bash -c "pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt -t $UPLOAD_LAMBDA_DIST && cp $UPLOAD_LAMBDA_SRC $UPLOAD_LAMBDA_DIST/handler.py"
+docker run --rm -v "$PROJECT_ROOT:/app" -w /app python:3.11-slim bash -c "pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt -t $UPLOAD_LAMBDA_DIST && cp $UPLOAD_LAMBDA_SRC $UPLOAD_LAMBDA_DIST/handler.py && chmod -R 755 $UPLOAD_LAMBDA_DIST && echo 'Handler copiado com sucesso'"
+
 
 echo "🛠️ Aplicando infraestrutura via Terraform..."
 # Injeta GITHUB_TOKEN e outras variáveis necessárias para o Terraform
 docker run --rm --network genefic-net -v "$PROJECT_ROOT:/app" -w /app/infrastructure/terraform \
   -e TF_VAR_environment="local" \
-  -e TF_VAR_ollama_endpoint="http://host.docker.internal:11434" \
   -e TF_VAR_primary_model="${PRIMARY_MODEL}" \
   -e TF_VAR_fallback_model="${FALLBACK_MODEL}" \
-  -e TF_VAR_ollama_api_key="${OLLAMA_API_KEY}" \
+  -e TF_VAR_groq_api_key="${GROQ_API_KEY}" \
   -e TF_VAR_github_token="${GITHUB_TOKEN}" \
   -e AWS_ACCESS_KEY_ID="test" \
   -e AWS_SECRET_ACCESS_KEY="test" \
@@ -84,10 +98,9 @@ docker run --rm --network genefic-net -v "$PROJECT_ROOT:/app" -w /app/infrastruc
 
 docker run --rm --network genefic-net -v "$PROJECT_ROOT:/app" -w /app/infrastructure/terraform \
   -e TF_VAR_environment="local" \
-  -e TF_VAR_ollama_endpoint="http://host.docker.internal:11434" \
   -e TF_VAR_primary_model="${PRIMARY_MODEL}" \
   -e TF_VAR_fallback_model="${FALLBACK_MODEL}" \
-  -e TF_VAR_ollama_api_key="${OLLAMA_API_KEY}" \
+  -e TF_VAR_groq_api_key="${GROQ_API_KEY}" \
   -e TF_VAR_github_token="${GITHUB_TOKEN}" \
   -e AWS_ACCESS_KEY_ID="test" \
   -e AWS_SECRET_ACCESS_KEY="test" \

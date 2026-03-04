@@ -23,21 +23,29 @@ def check_infra():
     except Exception as e:
         print(f"  [ERRO] AWS: {e}")
 
-    # 2. Verificar Ollama
-    print(f"AI (Ollama): {ollama_endpoint}")
-    try:
-        with urllib.request.urlopen(ollama_endpoint, timeout=5) as res:
-            data = json.loads(res.read().decode("utf-8"))
-            models = [m["name"] for m in data.get("models", [])]
-            print(f"  [OK] Ollama API ativa. Modelos disponíveis: {models}")
-            
-            target_model = os.environ.get("OLLAMA_MODEL", "llama3.2")
-            if any(target_model in m for m in models):
-                print(f"  [OK] Modelo '{target_model}' pronto para uso.")
-            else:
-                print(f"  [AVISO] Modelo '{target_model}' não encontrado na lista.")
-    except Exception as e:
-        print(f"  [ERRO] Ollama: Não respondendo. Certifique-se de que o container está rodando e a porta 11434 está aberta.")
+    # 2. Verificar Groq
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+    if not groq_api_key:
+        print("  [ERRO] GROQ_API_KEY não encontrada.")
+    else:
+        print(f"AI (Groq): Configurada")
+        try:
+            req = urllib.request.Request(
+                "https://api.groq.com/openai/v1/models",
+                headers={"Authorization": f"Bearer {groq_api_key}"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as res:
+                data = json.loads(res.read().decode("utf-8"))
+                models = [m["id"] for m in data.get("data", [])]
+                print(f"  [OK] Groq API ativa. Modelos disponíveis: {len(models)}")
+                
+                target_model = os.environ.get("PRIMARY_MODEL", "llama-3.3-70b-versatile")
+                if any(target_model in m for m in models):
+                    print(f"  [OK] Modelo '{target_model}' pronto para uso.")
+                else:
+                    print(f"  [AVISO] Modelo '{target_model}' não encontrado na lista.")
+        except Exception as e:
+            print(f"  [ERRO] Groq API: Falha na conexão - {e}")
 
 if __name__ == "__main__":
     check_infra()
