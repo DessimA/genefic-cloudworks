@@ -1,18 +1,25 @@
 import json
 import os
+import sys
 import pytest
 import boto3
 from unittest.mock import patch, MagicMock
 from moto import mock_dynamodb
 
+# Add project root to path so we can import backend
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+
 # Set environment variables BEFORE importing handler
-os.environ["AI_PROVIDER"] = "ollama"
-os.environ["OLLAMA_ENDPOINT"] = "http://mock-ollama:11434/v1/chat/completions"
-os.environ["OLLAMA_MODEL"] = "llama3.2"
+os.environ["GROQ_API_KEY"] = "mock-key"
+os.environ["PRIMARY_MODEL"] = "llama-3.3-70b-versatile"
+os.environ["FALLBACK_MODEL"] = "llama-3.1-8b-instant"
 os.environ["DYNAMODB_TABLE"] = "test-metadata-table"
 os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+os.environ["AWS_ENDPOINT_URL"] = "http://localhost:4566"
 
-from src.functions.upload.handler import handler
+from backend.lambdas.analyse.handler import handler
 
 @pytest.fixture
 def aws_credentials():
@@ -25,61 +32,67 @@ def aws_credentials():
 @mock_dynamodb
 def test_upload_handler_success(aws_credentials):
     # Setup mock DynamoDB
-    dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+    dynamodb = boto3.resource("dynamodb", region_name="us-east-1", endpoint_url="http://localhost:4566")
     table = dynamodb.create_table(
         TableName="test-metadata-table",
         KeySchema=[
-            {"AttributeName": "project_id", "KeyType": "HASH"},
+            {"AttributeName": "user_id", "KeyType": "HASH"},
             {"AttributeName": "timestamp", "KeyType": "RANGE"},
         ],
         AttributeDefinitions=[
-            {"AttributeName": "project_id", "AttributeType": "S"},
+            {"AttributeName": "user_id", "AttributeType": "S"},
             {"AttributeName": "timestamp", "AttributeType": "N"},
         ],
         ProvisionedThroughput={"ReadCapacityUnits": 1, "WriteCapacityUnits": 1},
     )
 
-    # Mock Ollama Response
-    mock_ollama_response = {
-        "choices": [
-            {
-                "message": {
-                    "content": "Narrativa Profissional: Este projeto é um Quiz..."
-                }
-            }
-        ]
-    }
+    # Mock Groq Response
+    mock_groq_content = json.dumps({
+        "tech_score": 95,
+        "improvements": ["Add tests"],
+        "ats_summary": "Great project...",
+        "key_achievements": ["Built a rocket"],
+        "technologies": ["Python"]
+    })
+    
+    mock_chat_completion = MagicMock()
+    mock_chat_completion.choices[0].message.content = mock_groq_content
 
-    # Patch urllib.request.urlopen to mock Ollama API call
-    with patch("urllib.request.urlopen") as mock_urlopen:
-        mock_response = MagicMock()
-        mock_response.read.return_value = json.dumps(mock_ollama_response).encode("utf-8")
-        mock_response.__enter__.return_value = mock_response
-        mock_urlopen.return_value = mock_response
+    # Mock fetch_docs to avoid GitHub calls
+    with patch("backend.lambdas.analyse.handler.fetch_docs") as mock_fetch_docs, \
+         patch("backend.lambdas.analyse.handler.groq_client.chat.completions.create") as mock_groq_create, \
+         patch("backend.lambdas.analyse.handler.lambda_client.invoke") as mock_lambda_invoke:
+        
+        mock_fetch_docs.return_value = "Mocked Repository Content"
+        mock_groq_create.return_value = mock_chat_completion
 
-        # Mock event
-        event = {
+        # 1. Test Initial Request (creates task)
+        event_init = {
             "body": json.dumps({"repo_url": "https://github.com/DessimA/quizlab"}),
             "httpMethod": "POST",
         }
-
-        # Call handler
-        response = handler(event, None)
-
-        # Assertions
-        assert response["statusCode"] == 200
-        body = json.loads(response["body"])
+        # Mock Context
+        mock_context = MagicMock()
+        mock_context.function_name = "test-func"
         
-        assert "analysis" in body
-        assert body["repo_name"] == "quizlab"
-        assert body["tech_score"] == 100
-        assert "Narrativa Profissional" in body["analysis"]
+        response_init = handler(event_init, mock_context)
+        assert response_init["statusCode"] == 202
+        task_id = json.loads(response_init["body"])["task_id"]
 
-        # Verify DynamoDB persistence
+        # 2. Test Worker Execution (processes task)
+        event_worker = {
+            "source": "worker",
+            "task_id": task_id,
+            "repo_url": "https://github.com/DessimA/quizlab"
+        }
+        handler(event_worker, None)
+
+        # Verify DynamoDB update
         items = table.scan()["Items"]
         assert len(items) == 1
-        assert items[0]["repo_name"] == "quizlab"
-        assert items[0]["analysis"] == body["analysis"]
+        assert items[0]["status"] == "COMPLETED"
+        assert items[0]["tech_score"] == 95
+        assert items[0]["repo_url"] == "https://github.com/DessimA/quizlab"
 
 @mock_dynamodb
 def test_upload_handler_missing_url(aws_credentials):
@@ -87,32 +100,44 @@ def test_upload_handler_missing_url(aws_credentials):
         "body": json.dumps({}),
         "httpMethod": "POST",
     }
-    response = handler(event, None)
+    response = handler(event, MagicMock())
     assert response["statusCode"] == 400
     assert "error" in json.loads(response["body"])
 
 @mock_dynamodb
-def test_upload_handler_ollama_failure(aws_credentials):
-     # Setup mock DynamoDB (needed because handler initializes resource)
-    dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
-    dynamodb.create_table(
+def test_upload_handler_groq_failure(aws_credentials):
+     # Setup mock DynamoDB
+    dynamodb = boto3.resource("dynamodb", region_name="us-east-1", endpoint_url="http://localhost:4566")
+    table = dynamodb.create_table(
         TableName="test-metadata-table",
-        KeySchema=[{"AttributeName": "project_id", "KeyType": "HASH"}, {"AttributeName": "timestamp", "KeyType": "RANGE"}],
-        AttributeDefinitions=[{"AttributeName": "project_id", "AttributeType": "S"}, {"AttributeName": "timestamp", "AttributeType": "N"}],
+        KeySchema=[{"AttributeName": "user_id", "KeyType": "HASH"}, {"AttributeName": "timestamp", "KeyType": "RANGE"}],
+        AttributeDefinitions=[{"AttributeName": "user_id", "AttributeType": "S"}, {"AttributeName": "timestamp", "AttributeType": "N"}],
         ProvisionedThroughput={"ReadCapacityUnits": 1, "WriteCapacityUnits": 1},
     )
 
-    with patch("urllib.request.urlopen") as mock_urlopen:
-        mock_urlopen.side_effect = Exception("Ollama Down")
+    with patch("backend.lambdas.analyse.handler.fetch_docs") as mock_fetch_docs, \
+         patch("backend.lambdas.analyse.handler.groq_client.chat.completions.create") as mock_groq_create:
+        
+        mock_fetch_docs.return_value = "Mocked Content"
+        mock_groq_create.side_effect = Exception("Groq Down")
 
-        event = {
-            "body": json.dumps({"repo_url": "https://github.com/DessimA/quizlab"}),
-            "httpMethod": "POST",
+        # Create initial task first
+        table.put_item(Item={
+            "user_id": "anonymous",
+            "timestamp": 123456,
+            "status": "PROCESSING",
+            "repo_url": "https://github.com/DessimA/quizlab"
+        })
+
+        event_worker = {
+            "source": "worker",
+            "task_id": 123456,
+            "repo_url": "https://github.com/DessimA/quizlab"
         }
 
-        response = handler(event, None)
+        handler(event_worker, None)
         
-        # Handler should still return success but with error message in analysis
-        assert response["statusCode"] == 200
-        body = json.loads(response["body"])
-        assert "Falha técnica na análise IA" in body["analysis"]
+        # Verify failure status
+        item = table.get_item(Key={"user_id": "anonymous", "timestamp": 123456})["Item"]
+        assert item["status"] == "FAILED"
+        assert "Groq Down" in str(item["structured_data"]["error"])
