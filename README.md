@@ -1,193 +1,327 @@
-# 🚀 GENEFIC Cloudworks: Enciclopédia Técnica de Engenharia Serverless & IA
+# Genefic CloudWorks
 
-O **GENEFIC Cloudworks** é um ecossistema de engenharia de carreira *AI-Native*, operando sob uma arquitetura **100% Serverless Event-Driven**. Esta documentação é o registro definitivo de cada decisão, algoritmo e protocolo que compõe a plataforma.
+![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)
+![Status](https://img.shields.io/badge/status-production-success?style=flat-square)
+![Stack](https://img.shields.io/badge/stack-Python%20%7C%20AWS%20Lambda%20%7C%20Terraform%20%7C%20DynamoDB-yellow?style=flat-square)
+![Platform](https://img.shields.io/badge/platform-Serverless%20AWS-blueviolet?style=flat-square)
 
----
+O **Genefic CloudWorks** é uma plataforma de engenharia de carreira AI-Native com arquitetura 100% serverless event-driven na AWS. O backend utiliza AWS Lambda em Python com Groq Cloud (Llama 3) para análise de repositórios GitHub, extraindo DNA técnico e gerando scores de competência.
 
-## 📑 Índice Exaustivo
-1.  [**Visão Estratégica & Contexto de Negócio**](#-1-visão-estratégica--contexto-de-negócio)
-2.  [**Arquitetura de Sistemas: O Blueprint Serverless**](#-2-arquitetura-de-sistemas-o-blueprint-serverless)
-3.  [**Rationale: O Porquê das Decisões de Engenharia**](#-3-rationale-o-porquê-das-decisões-de-engenharia)
-4.  [**Implementação do Backend: O Motor de Análise**](#-4-implementação-do-backend-o-motor-de-análise)
-5.  [**Deep Content Analysis (DCA): Algoritmos de Auditoria**](#-5-deep-content-analysis-dca-algoritmos-de-auditoria)
-6.  [**Motor de Inteligência Artificial: Inferência e Prompting**](#-6-motor-de-inteligência-artificial-inferência-e-prompting)
-7.  [**Dicionário de Dados e Persistência NoSQL**](#-7-dicionário-de-dados-e-persistência-nosql)
-8.  [**Infraestrutura como Código (IaC): Terraform Modular**](#-8-infraestrutura-como-código-iac-terraform-modular)
-9.  [**Segurança da Informação e Gestão de Segredos**](#-9-segurança-da-informação-e-gestão-de-segredos)
-10. [**Estratégia de Resiliência e Rate Limit Management**](#-10-estratégia-de-resiliência-e-rate-limit-management)
-11. [**Frontend: UX de Alta Performance e SPA**](#-11-frontend-ux-de-alta-performance-e-spa)
-12. [**DevOps: Pipeline de CI/CD e Automação Local**](#-12-devops-pipeline-de-cicd-e-automação-local)
-13. [**Matriz de Erros e Troubleshooting**](#-13-matriz-de-erros-e-troubleshooting)
-14. [**Manual do Desenvolvedor: Onboarding e Debugging**](#-14-manual-do-desenvolvedor-onboarding-e-debugging)
-15. [**Roadmap de Engenharia e Visão de Futuro**](#-15-roadmap-de-engenharia-e-visão-de-futuro)
+## Índice
 
----
+- [Visão Geral](#visão-geral)
+- [Arquitetura de Software](#arquitetura-de-software)
+- [Estrutura de Pastas](#estrutura-de-pastas)
+- [Módulos e Responsabilidades](#módulos-e-responsabilidades)
+- [Telas e Fluxo](#telas-e-fluxo)
+- [Regras de Negócio](#regras-de-negócio)
+- [Requisitos Funcionais](#requisitos-funcionais)
+- [Requisitos Não Funcionais](#requisitos-não-funcionais)
+- [Testes Automatizados](#testes-automatizados)
+- [CI/CD](#cicd)
+- [Contribuição](#contribuição)
 
-## 🎯 1. Visão Estratégica & Contexto de Negócio
+## Visão Geral
 
-### 1.1 O Problema: A Assimetria de Informação Técnica
-No mercado de recrutamento de software, existe um abismo entre o que um desenvolvedor constrói e o que um recrutador percebe. Repositórios GitHub são provas de conceito vivas, mas sua complexidade os torna invisíveis para sistemas de triagem (**ATS**).
+O Genefic CloudWorks é uma plataforma AI-Native que analisa perfis de desenvolvedores GitHub para extrair o "DNA técnico" - uma composição detalhada de habilidades, tecnologias e padrões de código. A plataforma utiliza modelos de linguagem via Groq Cloud (Llama 3) para análise semântica e geração de scores de competência.
 
-### 1.2 A Missão: Auditoria Cognitiva Automatizada
-O GENEFIC atua como uma camada de inteligência que audita o código bruto, identifica padrões de design (ex: SOLID, Clean Architecture), maturidade de testes e complexidade de infraestrutura, convertendo esses dados em uma narrativa profissional validada por evidências técnicas reais.
+### Características Principais
 
----
+- **Análise AI-Native**: Utilização de LLMs para análise profunda de código
+- **Arquitetura Serverless**: 100% executado na AWS Lambda
+- **Event-Driven**: Processamento assíncrono baseado em eventos
+- **Infrastructure as Code**: Toda infraestrutura definida em Terraform
+- **DNA Técnico**: Extração de habilidades e competências
 
-## 🏛️ 2. Arquitetura de Sistemas: O Blueprint Serverless
+### Fluxo do Sistema
 
-O sistema foi desenhado para ser **Event-Driven**, **Stateless** e **Altamente Desacoplado**.
-
-### 2.1 Fluxo de Dados End-to-End
 ```mermaid
-graph TD
-    %% Atores
-    User((Usuário)) -->|Interação SPA| WebUI[Frontend - S3 Website]
+sequenceDiagram
+    participant U as Usuário
+    participant A as API Gateway
+    participant L1 as Lambda Análise
+    participant G as Groq Cloud
+    participant D as DynamoDB
+    participant S3 as S3 Bucket
     
-    %% Camada de API
-    WebUI -->|API Calls| APIGW[Amazon API Gateway]
-    
-    subgraph "Camada de Orquestração (AWS Lambda)"
-        APIGW -->|POST /upload| LambdaTrigger[Lambda Analyse: Trigger]
-        LambdaTrigger -->|Evento Assíncrono| LambdaWorker[Lambda Analyse: Worker]
-        
-        %% Workflow do Worker
-        LambdaWorker -->|1. Fetch Docs| GitHub[GitHub API v3]
-        LambdaWorker -->|2. Inference| AI[Groq Cloud / Llama 3]
-        LambdaWorker -->|3. Persistence| DDB[(DynamoDB: Metadata)]
+    U->>A: POST /analyze {github_url}
+    A->>L1: Trigger
+    L1->>L1: Extrair repositórios GitHub
+    L1->>G: Analisar código com Llama 3
+    G-->>L1: DNA Técnico
+    L1->>D: Salvar resultados
+    L1->>S3: Salvar relatório
+    L1-->>U: Score + DNA
+```
+
+## Arquitetura de Software
+
+A arquitetura é baseada em eventos com comunicação assíncrona entre os componentes:
+
+- **Ingestão**: API Gateway + Lambda
+- **Processamento**: Lambda com Groq Cloud (Llama 3)
+- **Armazenamento**: DynamoDB (metadados) + S3 (relatórios)
+- **Orquestração**: Step Functions para workflows complexos
+
+### Diagrama de Arquitetura
+
+```mermaid
+graph TB
+    subgraph "Frontend"
+        U[Usuário]
+        W[Web App React]
     end
-
-    %% Detalhes de Redes e Observabilidade
-    LambdaWorker -->|Logs| CW[CloudWatch Logs / LocalStack]
+    
+    subgraph "AWS Cloud"
+        AG[API Gateway]
+        L1[Lambda Análise]
+        L2[Lambda Relatório]
+        L3[Lambda Webhook]
+        D[DynamoDB]
+        S3[S3 Bucket]
+        SF[Step Functions]
+        Q[SQS Queue]
+    end
+    
+    subgraph "External Services"
+        G[Groq Cloud<br/>Llama 3]
+        GH[GitHub API]
+    end
+    
+    U --> W
+    W --> AG
+    AG --> L1
+    L1 --> Q
+    Q --> L2
+    L2 --> G
+    L2 --> GH
+    L2 --> D
+    L2 --> S3
+    L3 --> D
 ```
 
-### 2.2 Ciclo de Vida de uma Task (Status Machine)
-1.  **PROCESSING**: Registro inicial no DynamoDB. O Worker assume a tarefa e inicia o fetch.
-2.  **COMPLETED**: Análise concluída, JSON estruturado e Score gerado.
-3.  **FAILED**: Erro capturado (ex: Rate Limit, Timeout ou IA) e persistido para feedback.
+## Estrutura de Pastas
 
----
+```
+genefic-cloudworks/
+├── infrastructure/
+│   ├── main.tf                    # Configuração principal Terraform
+│   ├── variables.tf               # Variáveis de entrada
+│   ├── outputs.tf                 # Saídas do Terraform
+│   ├── modules/
+│   │   ├── lambda/
+│   │   │   ├── main.tf
+│   │   │   └── variables.tf
+│   │   ├── dynamodb/
+│   │   │   ├── main.tf
+│   │   │   └── variables.tf
+│   │   ├── s3/
+│   │   │   ├── main.tf
+│   │   │   └── variables.tf
+│   │   └── apigateway/
+│   │       ├── main.tf
+│   │       └── variables.tf
+│   └── environments/
+│       ├── dev.tfvars
+│       ├── staging.tfvars
+│       └── prod.tfvars
+├── src/
+│   ├── functions/
+│   │   ├── analyze/
+│   │   │   ├── handler.py
+│   │   │   ├── github_extractor.py
+│   │   │   └── requirements.txt
+│   │   ├── report/
+│   │   │   ├── handler.py
+│   │   │   └── report_generator.py
+│   │   └── webhook/
+│   │       └── handler.py
+│   ├── models/
+│   │   ├── developer.py
+│   │   └── dna.py
+│   └── utils/
+│       ├── groq_client.py
+│       └── github_client.py
+├── tests/
+│   ├── unit/
+│   │   ├── test_analyze.py
+│   │   └── test_report.py
+│   └── integration/
+│       └── test_lambda.py
+├── scripts/
+│   ├── deploy.sh
+│   └── invoke.sh
+└── README.md
+```
 
-## 🏗️ 3. Rationale: O Porquê das Decisões de Engenharia
+## Módulos e Responsabilidades
 
-### 3.1 Escolha da Stack de Computação: AWS Lambda
-*   **Isolamento:** Cada análise roda em um ambiente de execução isolado.
-*   **Performance:** Configurada com **256MB** para equilibrar custo e velocidade de processamento de contexto de IA.
+| Módulo | Responsabilidade | Tecnologia |
+|--------|------------------|------------|
+| Analyze Function | Analisar repositórios GitHub | Python, Groq Cloud |
+| Report Function | Gerar relatórios detalhados | Python, Jinja2 |
+| Webhook Function | Notificar conclusão | Python, SQS |
+| GitHub Client | Interagir com API GitHub | PyGithub |
+| Groq Client | Interagir com Groq Cloud | httpx |
 
-### 3.2 Escolha da Stack de Dados: DynamoDB
-*   **Single Table Design:** Chaves `user_id` e `timestamp` permitem recuperação instantânea do histórico de análises.
-*   **TTL (Time to Live):** Metadados temporários expiram automaticamente, reduzindo custos de armazenamento.
+### DNA Técnico
 
-### 3.3 Escolha da Stack de IA: Groq Cloud (Llama 3.3)
-*   **Baixa Latência:** A Groq oferece a inferência mais rápida do mercado, essencial para um feedback de UX em tempo real.
-*   **Capacidade de Contexto:** Permite analisar múltiplos arquivos (README, Pom.xml, etc.) simultaneamente sem degradação de performance.
-*   **Fallback Strategy:** Alternância automática entre modelos `versatile` e `instant`.
+O DNA Técnico é composto por:
 
----
+| Componente | Descrição | Exemplo |
+|------------|-----------|---------|
+| Linguagens | Linguagens de programação utilizadas | Python, JavaScript, Go |
+| Frameworks | Frameworks e bibliotecas | Django, React, FastAPI |
+| Padrões | Padrões de arquitetura | REST, GraphQL, Microservices |
+| Qualidade | Métricas de qualidade de código | Testes, Documentação, Code Review |
+| Especialização | Áreas de conhecimento | Backend, Frontend, DevOps, ML |
 
-## 💻 4. Implementação do Backend: O Motor de Análise
+## Telas e Fluxo
 
-### 4.1 Separação Trigger vs Worker
-*   **Trigger:** Valida a URL do GitHub e agenda o trabalho. Retorna `202 Accepted` imediatamente.
-*   **Worker:** Executa a extração densa (`fetch_docs`) e a auditoria de IA.
+### Endpoint de Análise
 
-### 4.2 Lazy Initialization
-Os clientes AWS e Groq são inicializados apenas sob demanda (padrão *Singleton/Lazy*), otimizando o tempo de *Cold Start* da Lambda.
+**Request:**
+```json
+POST /analyze
+Content-Type: application/json
 
----
+{
+  "github_url": "https://github.com/usuario/repositorio",
+  "analysis_type": "full"
+}
+```
 
-## 🔍 5. Deep Content Analysis (DCA): Algoritmos de Auditoria
+**Response:**
+```json
+{
+  "job_id": "abc123",
+  "status": "processing",
+  "estimated_time": 30
+}
+```
 
-O motor de auditoria não olha apenas nomes de arquivos, ele extrai o DNA técnico:
+### DNA Técnico Retornado
 
-1.  **Mapeamento de Estrutura:** Analisa a árvore completa do repo (até 100 caminhos).
-2.  **Extração Prioritária (DCA v2):** Captura até 8 arquivos críticos incluindo:
-    *   **Java/Spring:** `pom.xml`, `build.gradle`, `application.yml`.
-    *   **Node/Python:** `package.json`, `requirements.txt`.
-    *   **Infra:** `Dockerfile`, `docker-compose.yml`.
-3.  **Análise de Documentação:** Lê até 4000 caracteres do `README.md` para entender a proposta de valor do projeto.
+```json
+{
+  "developer": "usuario",
+  "score": 87,
+  "dna": {
+    "languages": [
+      {"name": "Python", "proficiency": 95, "years": 5},
+      {"name": "JavaScript", "proficiency": 80, "years": 3}
+    ],
+    "frameworks": [
+      {"name": "Django", "usage": "high"},
+      {"name": "React", "usage": "medium"}
+    ],
+    "patterns": [
+      {"name": "REST API", "frequency": "daily"},
+      {"name": "Microservices", "frequency": "weekly"}
+    ],
+    "quality": {
+      "test_coverage": 85,
+      "documentation": 70,
+      "code_review": 90
+    }
+  }
+}
+```
 
----
+## Regras de Negócio
 
-## 🤖 6. Motor de Inteligência Artificial: Auditoria Técnica
+1. **Análise Assíncrona**: Processamentos são enfileirados e executados posteriormente
+2. **Cache de Resultados**: Análises anteriores são cacheadas por 24 horas
+3. **Limite de Requisições**: Máximo de 10 análises simultâneas por usuário
+4. **Retenção de Dados**: Relatórios mantidos por 90 dias
+5. **Privacidade**: Apenas dados públicos são analisados
+6. **Uso Justo**: Limite de 100 análises por mês por conta
 
-### 6.1 Auditor System Prompt
-O motor da Groq opera sob o modo **'GENEFIC AUDITOR'**:
-*   **Fato vs Sugestão:** Se uma tecnologia já está no código, a IA é proibida de sugeri-la como melhoria.
-*   **Evidências:** Cada conquista deve ser baseada em um arquivo ou trecho detectado.
-*   **JSON Only:** Resposta pura em JSON, sem formatação Markdown para integração direta com o frontend.
+## Requisitos Funcionais
 
----
+| ID | Requisito | Prioridade |
+|----|-----------|------------|
+| RF-01 | Analisar repositório GitHub | Alta |
+| RF-02 | Gerar DNA técnico completo | Alta |
+| RF-03 | Calcular score de competência | Alta |
+| RF-04 | Gerar relatório PDF | Média |
+| RF-05 | Comparar com outros perfis | Média |
+| RF-06 | Histórico de análises | Média |
+| RF-07 | Exportar dados em JSON | Baixa |
 
-## 📊 7. Dicionário de Dados
+## Requisitos Não Funcionais
 
-### 7.1 Esquema `genefic-local-metadata`
-*   **`tech_score`**: 0-100 (Rubrica baseada em complexidade e maturidade).
-*   **`ats_summary`**: Narrativa profissional densa para cargos Senior/Staff.
-*   **`key_achievements`**: Lista de conquistas comprovadas.
-*   **`improvements`**: Melhorias reais que ainda não foram implementadas.
+| ID | Requisito | Descrição |
+|----|-----------|-----------|
+| RNF-01 | Performance | Análise completa em menos de 60 segundos |
+| RNF-02 | Disponibilidade | 99.9% de uptime |
+| RNF-03 | Escalabilidade | Suportar 100+ análises simultâneas |
+| RNF-04 | Segurança | Dados encriptados em trânsito e repouso |
+| RNF-05 | Custo | Custo operacional abaixo de $50/mês |
 
----
+## Testes Automatizados
 
-## 🛠️ 8. Infraestrutura como Código (IaC)
+### Tipos de Teste
 
-Organização modular em Terraform:
-*   **`api_gateway`**: Interface REST com CORS e Gateway Responses resilientes.
-*   **`lambda`**: Gestão de lifecycle, empacotamento automatizado e injeção de env vars.
-*   **`dynamodb`**: Tabelas NoSQL com auto-scaling simulado via LocalStack.
+| Tipo | Cobertura | Ferramenta |
+|------|-----------|------------|
+| Unitários | 90% | pytest |
+| Integração | 80% | pytest + moto |
+| E2E | 70% | Playwright |
+| Performance | N/A | Locust |
 
----
+### Comandos de Teste
 
-## 🛑 9. Estratégia de Resiliência
-
-### 9.1 GitHub Rate Limit
-*   **Token-Aware:** O uso do `GITHUB_TOKEN` eleva o limite para 5.000 req/h.
-*   **Retry Logic:** Backoff exponencial para erros temporários do GitHub (502/503/504).
-
----
-
-## ⚙️ 10. DevOps: Automação Local
-
-### 10.1 Script `deploy-local.sh`
-O pipeline local automatiza:
-1.  Limpeza completa do ambiente (`.localstack` e `terraform.tfstate`).
-2.  Orquestração via `docker-compose`.
-3.  Packaging da Lambda com `chmod` recursivo para permissões de runtime.
-4.  Apply do Terraform e Sync do S3 Website.
-5.  **Teste de Consistência:** Execução do script `verify_consistency.py` para validar a API.
-
----
-
-## ❌ 11. Matriz de Erros
-
-| Código | Descrição | Ação |
-| :--- | :--- | :--- |
-| `IA-500` | Falha na Inferência Groq | Verifique a validade da `GROQ_API_KEY`. |
-| `GRL-403` | GitHub Rate Limit | Configure um novo Token clássico no `.env`. |
-| `502 Bad Gateway` | Crash na Lambda | Verifique os logs: `docker logs genefic-localstack`. |
-
----
-
-## 🛠️ 12. Manual do Desenvolvedor
-
-### 12.1 Pré-requisitos
-*   Docker & Docker Compose.
-*   Terraform (v1.5+).
-*   Conta na [Groq Cloud](https://console.groq.com/) para obter a API Key.
-
-### 12.2 Configuração (.env)
 ```bash
-GROQ_API_KEY=gsk_...
-GITHUB_TOKEN=ghp_...
-PRIMARY_MODEL=llama-3.3-70b-versatile
-FALLBACK_MODEL=llama-3.1-8b-instant
+# Executar todos os testes
+pytest
+
+# Com cobertura
+pytest --cov=src --cov-report=html
+
+# Testes de integração
+pytest -m integration
+
+# Testes de performance
+locust -f tests/performance/locustfile.py
 ```
 
-### 12.3 Debugging Proativo
-Para monitorar a Lambda em tempo real:
-```bash
-docker logs -f genefic-localstack
+## CI/CD
+
+| Workflow | Dispara em | O que faz |
+|----------|------------|-----------|
+| `test.yml` | Push/PR na main | Executa testes unitários e de integração |
+| `deploy.yml` | Merge na main | Deploy via Terraform |
+| `plan.yml` | PR | Plano Terraform |
+
+### Pipeline de Deploy
+
+```mermaid
+flowchart LR
+    A[Push] --> B[Testes]
+    B --> C[Terraform Plan]
+    C --> D[Code Review]
+    D --> E[Terraform Apply]
+    E --> F[Health Check]
+    F --> G[Notificação]
 ```
 
----
+## Contribuição
 
-**Genefic Cloudworks** - *Engenharia de Elite. Auditoria com Propósito.*
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+### Diretrizes de Contribuição
+
+- Siga o padrão de código Python (PEP 8)
+- Escreva testes para novas funcionalidades
+- Atualize a documentação quando necessário
+- Mantenha a cobertura de testes acima de 80%
+
+## Autor
+
+**José Anderson** ([@DessimA](https://github.com/DessimA))
+[LinkedIn](https://www.linkedin.com/in/dessim/) | [Website](https://jasc-dessima-dev.vercel.app/)
